@@ -487,9 +487,48 @@ const telemetryTargets = {
 
 const computeCanvas = $("#compute-canvas");
 const computeButton = $("#compute-rerun");
+const computeTabs = $$(".compute-tab");
+const computePanels = $$(".compute-panel");
+const lifeCanvas = $("#life-canvas");
+const lifeControls = {
+  state: $("#life-state"),
+  generation: $("#life-generation"),
+  grid: $("#life-grid-size"),
+  live: $("#life-live-count"),
+  step: $("#life-step-time"),
+  density: $("#life-density"),
+  toggle: $("#life-toggle"),
+  stepButton: $("#life-step"),
+  random: $("#life-random"),
+  clear: $("#life-clear")
+};
 const WEBGPU_MATRIX_SIZE = 256;
 const CPU_MATRIX_SIZE = 128;
 const WORKGROUP_SIZE = 8;
+const LIFE_COLUMNS = 80;
+const LIFE_ROWS = 48;
+
+const setActiveComputeTab = (tabName) => {
+  computeTabs.forEach((tab) => {
+    const isActive = tab.dataset.tab === tabName;
+    tab.classList.toggle("active", isActive);
+    tab.setAttribute("aria-selected", String(isActive));
+  });
+
+  computePanels.forEach((panel) => {
+    const isActive = panel.id === `${tabName}-panel`;
+    panel.classList.toggle("active", isActive);
+    panel.hidden = !isActive;
+  });
+
+  if (tabName === "life") {
+    drawLife();
+  }
+};
+
+computeTabs.forEach((tab) => {
+  tab.addEventListener("click", () => setActiveComputeTab(tab.dataset.tab || "matrix"));
+});
 
 const setTelemetry = (key, value) => {
   if (telemetryTargets[key]) telemetryTargets[key].textContent = value;
@@ -792,4 +831,228 @@ if (telemetryTargets.status) {
   if (computeButton) {
     computeButton.addEventListener("click", runComputeCell);
   }
+}
+
+let lifeCells = new Uint8Array(LIFE_COLUMNS * LIFE_ROWS);
+let lifeNext = new Uint8Array(LIFE_COLUMNS * LIFE_ROWS);
+let lifeGeneration = 0;
+let lifeRunning = false;
+let lifeAnimationId = 0;
+let lifeLastFrame = 0;
+let lifeDragging = false;
+
+const lifeIndex = (column, row) => row * LIFE_COLUMNS + column;
+
+const countLifeNeighbors = (column, row) => {
+  let neighbors = 0;
+
+  for (let yOffset = -1; yOffset <= 1; yOffset += 1) {
+    for (let xOffset = -1; xOffset <= 1; xOffset += 1) {
+      if (xOffset === 0 && yOffset === 0) continue;
+
+      const x = column + xOffset;
+      const y = row + yOffset;
+      if (x < 0 || x >= LIFE_COLUMNS || y < 0 || y >= LIFE_ROWS) continue;
+      neighbors += lifeCells[lifeIndex(x, y)];
+    }
+  }
+
+  return neighbors;
+};
+
+const countLiveCells = () => {
+  let live = 0;
+  for (let index = 0; index < lifeCells.length; index += 1) {
+    live += lifeCells[index];
+  }
+  return live;
+};
+
+const updateLifeTelemetry = (stepMs = null) => {
+  const live = countLiveCells();
+  if (lifeControls.state) lifeControls.state.textContent = lifeRunning ? "RUNNING" : "PAUSED";
+  if (lifeControls.generation) lifeControls.generation.textContent = String(lifeGeneration);
+  if (lifeControls.grid) lifeControls.grid.textContent = `${LIFE_COLUMNS} x ${LIFE_ROWS}`;
+  if (lifeControls.live) lifeControls.live.textContent = String(live);
+  if (lifeControls.step) lifeControls.step.textContent = stepMs === null ? "--" : stepMs.toFixed(2);
+  if (lifeControls.density) lifeControls.density.textContent = `${((live / lifeCells.length) * 100).toFixed(2)}%`;
+  if (lifeControls.toggle) lifeControls.toggle.textContent = lifeRunning ? "PAUSE" : "RUN";
+};
+
+const drawLife = () => {
+  if (!lifeCanvas) return;
+  const ctx = lifeCanvas.getContext("2d");
+  if (!ctx) return;
+
+  const cellWidth = lifeCanvas.width / LIFE_COLUMNS;
+  const cellHeight = lifeCanvas.height / LIFE_ROWS;
+
+  ctx.fillStyle = "#020202";
+  ctx.fillRect(0, 0, lifeCanvas.width, lifeCanvas.height);
+
+  for (let row = 0; row < LIFE_ROWS; row += 1) {
+    for (let column = 0; column < LIFE_COLUMNS; column += 1) {
+      if (!lifeCells[lifeIndex(column, row)]) continue;
+      ctx.fillStyle = (column + row + lifeGeneration) % 11 === 0 ? "#f59e0b" : "#7dd3fc";
+      ctx.fillRect(
+        Math.floor(column * cellWidth),
+        Math.floor(row * cellHeight),
+        Math.ceil(cellWidth) - 1,
+        Math.ceil(cellHeight) - 1
+      );
+    }
+  }
+
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
+  ctx.lineWidth = 1;
+  for (let column = 0; column <= LIFE_COLUMNS; column += 4) {
+    const x = Math.floor(column * cellWidth) + 0.5;
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, lifeCanvas.height);
+    ctx.stroke();
+  }
+  for (let row = 0; row <= LIFE_ROWS; row += 4) {
+    const y = Math.floor(row * cellHeight) + 0.5;
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(lifeCanvas.width, y);
+    ctx.stroke();
+  }
+};
+
+const stepLife = () => {
+  const start = performance.now();
+
+  for (let row = 0; row < LIFE_ROWS; row += 1) {
+    for (let column = 0; column < LIFE_COLUMNS; column += 1) {
+      const index = lifeIndex(column, row);
+      const live = lifeCells[index] === 1;
+      const neighbors = countLifeNeighbors(column, row);
+      lifeNext[index] = live ? Number(neighbors === 2 || neighbors === 3) : Number(neighbors === 3);
+    }
+  }
+
+  [lifeCells, lifeNext] = [lifeNext, lifeCells];
+  lifeNext.fill(0);
+  lifeGeneration += 1;
+  const elapsed = performance.now() - start;
+  drawLife();
+  updateLifeTelemetry(elapsed);
+};
+
+const animateLife = (timestamp) => {
+  if (!lifeRunning) return;
+
+  if (!lifeLastFrame || timestamp - lifeLastFrame >= 100) {
+    stepLife();
+    lifeLastFrame = timestamp;
+  }
+
+  lifeAnimationId = requestAnimationFrame(animateLife);
+};
+
+const setLifeRunning = (isRunning) => {
+  lifeRunning = isRunning;
+  updateLifeTelemetry();
+
+  if (lifeRunning) {
+    lifeLastFrame = 0;
+    cancelAnimationFrame(lifeAnimationId);
+    lifeAnimationId = requestAnimationFrame(animateLife);
+  } else {
+    cancelAnimationFrame(lifeAnimationId);
+  }
+};
+
+const seedLife = () => {
+  for (let row = 0; row < LIFE_ROWS; row += 1) {
+    for (let column = 0; column < LIFE_COLUMNS; column += 1) {
+      const centerBias =
+        column > LIFE_COLUMNS * 0.16 &&
+        column < LIFE_COLUMNS * 0.84 &&
+        row > LIFE_ROWS * 0.16 &&
+        row < LIFE_ROWS * 0.84;
+      const deterministic = ((column * 17 + row * 31 + (column ^ row) * 7) % 100) / 100;
+      lifeCells[lifeIndex(column, row)] = Number(centerBias && deterministic > 0.66);
+    }
+  }
+
+  lifeGeneration = 0;
+  drawLife();
+  updateLifeTelemetry();
+};
+
+const clearLife = () => {
+  setLifeRunning(false);
+  lifeCells.fill(0);
+  lifeNext.fill(0);
+  lifeGeneration = 0;
+  drawLife();
+  updateLifeTelemetry();
+};
+
+const getLifeCellFromPointer = (event) => {
+  const rect = lifeCanvas.getBoundingClientRect();
+  const column = Math.floor(((event.clientX - rect.left) / rect.width) * LIFE_COLUMNS);
+  const row = Math.floor(((event.clientY - rect.top) / rect.height) * LIFE_ROWS);
+  return {
+    column: Math.max(0, Math.min(LIFE_COLUMNS - 1, column)),
+    row: Math.max(0, Math.min(LIFE_ROWS - 1, row))
+  };
+};
+
+const setLifeCellFromPointer = (event, mode = "toggle") => {
+  if (!lifeCanvas) return;
+  const { column, row } = getLifeCellFromPointer(event);
+  const index = lifeIndex(column, row);
+  lifeCells[index] = mode === "paint" ? 1 : Number(!lifeCells[index]);
+  drawLife();
+  updateLifeTelemetry();
+};
+
+if (lifeCanvas) {
+  seedLife();
+
+  lifeCanvas.addEventListener("pointerdown", (event) => {
+    lifeDragging = true;
+    lifeCanvas.setPointerCapture(event.pointerId);
+    setLifeCellFromPointer(event);
+  });
+
+  lifeCanvas.addEventListener("pointermove", (event) => {
+    if (!lifeDragging) return;
+    setLifeCellFromPointer(event, "paint");
+  });
+
+  lifeCanvas.addEventListener("pointerup", (event) => {
+    lifeDragging = false;
+    lifeCanvas.releasePointerCapture(event.pointerId);
+  });
+
+  lifeCanvas.addEventListener("pointerleave", () => {
+    lifeDragging = false;
+  });
+}
+
+if (lifeControls.toggle) {
+  lifeControls.toggle.addEventListener("click", () => setLifeRunning(!lifeRunning));
+}
+
+if (lifeControls.stepButton) {
+  lifeControls.stepButton.addEventListener("click", () => {
+    setLifeRunning(false);
+    stepLife();
+  });
+}
+
+if (lifeControls.random) {
+  lifeControls.random.addEventListener("click", () => {
+    setLifeRunning(false);
+    seedLife();
+  });
+}
+
+if (lifeControls.clear) {
+  lifeControls.clear.addEventListener("click", clearLife);
 }

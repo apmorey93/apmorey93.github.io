@@ -213,22 +213,53 @@
             <h2>Client-Side Compute, Exposed.</h2>
           </header>
 
-          <div class="compute-cell-wrapper reveal-up" aria-label="Silicon compute telemetry">
-            <div class="compute-header">[TARGET]: WebGPU Matrix Multiplication</div>
-            <div class="compute-body">
-              <canvas id="compute-canvas" width="512" height="160" aria-label="Matrix output signature"></canvas>
-              <div class="telemetry-grid">
-                <div>BACKEND: <span id="gpu-status">INITIALIZING...</span></div>
-                <div>MATRIX: <span id="matrix-size">--</span></div>
-                <div>BUFFER: <span id="buffer-size">--</span> MB</div>
-                <div>WORKGROUPS: <span id="workgroup-count">--</span></div>
-                <div>DISPATCH: <span id="dispatch-time">--</span> ms</div>
-                <div>CHECKSUM: <span id="compute-checksum">--</span></div>
+          <div class="compute-cell-wrapper reveal-up" aria-label="Interactive logic console">
+            <div class="compute-tabs" role="tablist" aria-label="Interactive logic modes">
+              <button class="compute-tab active" id="tab-matrix" type="button" role="tab" aria-selected="true" aria-controls="matrix-panel" data-tab="matrix">MATRIX_KERNEL</button>
+              <button class="compute-tab" id="tab-life" type="button" role="tab" aria-selected="false" aria-controls="life-panel" data-tab="life">GAME_OF_LIFE</button>
+            </div>
+
+            <div class="compute-panel active" id="matrix-panel" role="tabpanel" aria-labelledby="tab-matrix">
+              <div class="compute-header">[TARGET]: WebGPU Matrix Multiplication</div>
+              <div class="compute-body">
+                <canvas id="compute-canvas" width="512" height="160" aria-label="Matrix output signature"></canvas>
+                <div class="telemetry-grid">
+                  <div>BACKEND: <span id="gpu-status">INITIALIZING...</span></div>
+                  <div>MATRIX: <span id="matrix-size">--</span></div>
+                  <div>BUFFER: <span id="buffer-size">--</span> MB</div>
+                  <div>WORKGROUPS: <span id="workgroup-count">--</span></div>
+                  <div>DISPATCH: <span id="dispatch-time">--</span> ms</div>
+                  <div>CHECKSUM: <span id="compute-checksum">--</span></div>
+                </div>
+              </div>
+              <div class="compute-status">
+                <span>ESTIMATED GFLOP/s: <strong id="gflops">--</strong></span>
+                <button type="button" id="compute-rerun">REPLAY_KERNEL</button>
               </div>
             </div>
-            <div class="compute-status">
-              <span>ESTIMATED GFLOP/s: <strong id="gflops">--</strong></span>
-              <button type="button" id="compute-rerun">REPLAY_KERNEL</button>
+
+            <div class="compute-panel" id="life-panel" role="tabpanel" aria-labelledby="tab-life" hidden>
+              <div class="compute-header">[TARGET]: Conway Game Of Life Cellular Automata</div>
+              <div class="compute-body life-body">
+                <canvas id="life-canvas" width="640" height="384" aria-label="Playable Game of Life cellular automata grid"></canvas>
+                <div class="telemetry-grid life-telemetry">
+                  <div>STATE: <span id="life-state">PAUSED</span></div>
+                  <div>GENERATION: <span id="life-generation">0</span></div>
+                  <div>GRID: <span id="life-grid-size">--</span></div>
+                  <div>LIVE CELLS: <span id="life-live-count">--</span></div>
+                  <div>STEP TIME: <span id="life-step-time">--</span> ms</div>
+                  <div>DENSITY: <span id="life-density">--</span></div>
+                </div>
+              </div>
+              <div class="compute-status life-controls">
+                <span>RULESET: <strong>B3/S23 // 1-BIT CELLULAR MEMORY</strong></span>
+                <div class="life-buttons" aria-label="Game of Life controls">
+                  <button type="button" id="life-toggle">RUN</button>
+                  <button type="button" id="life-step">STEP</button>
+                  <button type="button" id="life-random">RANDOMIZE</button>
+                  <button type="button" id="life-clear">CLEAR</button>
+                </div>
+              </div>
             </div>
           </div>
         </div>

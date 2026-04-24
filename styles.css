@@ -257,6 +257,8 @@ svg {
 .register-grid dd,
 .artifact-link,
 .compute-cell-wrapper,
+.compute-tabs,
+.compute-tab,
 .compute-header,
 .telemetry-grid,
 .compute-status,
@@ -478,6 +480,37 @@ svg {
   border-right: 0;
 }
 
+.compute-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-bottom: 1px solid var(--line);
+}
+
+.compute-tab {
+  min-height: 52px;
+  border: 0;
+  border-right: 1px solid var(--line);
+  background: transparent;
+  color: var(--quiet);
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.compute-tab:last-child {
+  border-right: 0;
+}
+
+.compute-tab:hover,
+.compute-tab.active {
+  color: var(--blue);
+  background: rgba(125, 211, 252, 0.06);
+}
+
+.compute-panel[hidden] {
+  display: none;
+}
+
 .compute-header {
   padding: 14px 18px;
   border-bottom: 1px solid var(--line);
@@ -492,7 +525,8 @@ svg {
   min-height: 360px;
 }
 
-#compute-canvas {
+#compute-canvas,
+#life-canvas {
   width: 100%;
   height: 100%;
   min-height: 360px;
@@ -500,6 +534,10 @@ svg {
   border-right: 1px solid var(--line);
   background: #020202;
   image-rendering: pixelated;
+}
+
+#life-canvas {
+  cursor: crosshair;
 }
 
 .telemetry-grid {
@@ -559,6 +597,21 @@ svg {
   cursor: wait;
 }
 
+.life-controls {
+  align-items: center;
+}
+
+.life-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.life-buttons button {
+  min-width: 106px;
+}
+
 .artifact-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -601,6 +654,7 @@ svg {
 }
 
 .artifact-link:hover,
+.compute-tab:hover,
 .compute-status button:hover:not(:disabled),
 .contact-panel a:hover,
 .contact-panel button:hover {
@@ -914,11 +968,13 @@ svg {
   .register-grid div,
   .system-card,
   #compute-canvas,
+  #life-canvas,
   .artifact-card {
     border-right: 0;
   }
 
-  #compute-canvas {
+  #compute-canvas,
+  #life-canvas {
     border-bottom: 1px solid var(--line);
   }
 
@@ -963,6 +1019,25 @@ svg {
 
   .compute-status button {
     width: 100%;
+  }
+
+  .compute-tabs {
+    grid-template-columns: 1fr;
+  }
+
+  .compute-tab {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .compute-tab:last-child {
+    border-bottom: 0;
+  }
+
+  .life-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    justify-content: stretch;
   }
 
   .contact-panel a,
