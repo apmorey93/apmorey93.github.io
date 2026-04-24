@@ -6,8 +6,9 @@ This is Aditya Morey's static personal portfolio. It is intentionally simple: HT
 
 - `index.html` - page content, sections, SEO title/description, links.
 - `styles.css` - visual design, responsive layout, mobile rules, colors, spacing.
-- `script.js` - interactions: preloader, cursor, scroll progress, mobile menu, chat widget, canvas background.
-- `assets/og-card.png` - social sharing preview image. The hero visual is built in HTML/CSS as a DFX stack, not a bitmap.
+- `script.js` - interactions: cursor, scroll progress, mobile menu, chat widget, canvas background.
+- `assets/aditya-morey-portrait.jpg` - optimized portrait used in the hero.
+- `assets/og-card.jpg` - social sharing preview image with portrait and silicon/AI visual treatment.
 - `README.md` - preview and deployment instructions.
 
 ## Editing Rules
@@ -41,6 +42,6 @@ First read `AGENTS.md` and `README.md`.
 Make this change: <describe the change>.
 Keep the site mobile friendly and GitHub Pages compatible.
 Do not edit files outside this repo.
-Verify the HTML, CSS, JS, DFX hero visual, and OG card still serve locally.
+Verify the HTML, CSS, JS, portrait hero visual, and OG card still serve locally.
 Summarize exactly what changed.
 ```

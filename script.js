@@ -1,7 +1,6 @@
 ﻿const $ = (selector, scope = document) => scope.querySelector(selector);
 const $$ = (selector, scope = document) => Array.from(scope.querySelectorAll(selector));
 
-const preloader = $("#preloader");
 const navToggle = $(".nav-toggle");
 const mobileMenu = $("#mobile-menu");
 const progress = $(".scroll-progress");
@@ -17,19 +16,6 @@ const canvas = $("#ambient-canvas");
 const ctx = canvas.getContext("2d");
 
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-const preloaderStartedAt = performance.now();
-let preloaderHidden = false;
-
-const hidePreloader = () => {
-  if (preloaderHidden) return;
-  preloaderHidden = true;
-  const remainingTime = Math.max(0, 900 - (performance.now() - preloaderStartedAt));
-  window.setTimeout(() => preloader?.classList.add("done"), remainingTime);
-};
-
-window.addEventListener("load", hidePreloader);
-document.addEventListener("DOMContentLoaded", hidePreloader);
-
 const setMenu = (isOpen) => {
   navToggle.classList.toggle("open", isOpen);
   navToggle.setAttribute("aria-expanded", String(isOpen));
@@ -337,8 +323,3 @@ document.addEventListener("visibilitychange", () => {
 
 resizeCanvas();
 drawCanvas();
-
-
-
-
-
