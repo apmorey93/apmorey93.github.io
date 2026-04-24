@@ -1,4 +1,4 @@
-﻿# Portfolio Maintenance Guide
+# Portfolio Maintenance Guide
 
 This is Aditya Morey's static personal portfolio. It is intentionally simple: HTML, CSS, and JavaScript with no build step.
 
@@ -7,7 +7,7 @@ This is Aditya Morey's static personal portfolio. It is intentionally simple: HT
 - `index.html` - page content, sections, SEO title/description, links.
 - `styles.css` - visual design, responsive layout, mobile rules, colors, spacing.
 - `script.js` - interactions: preloader, cursor, scroll progress, mobile menu, chat widget, canvas background.
-- `assets/hero-technology.png` - current hero image.
+- `assets/og-card.png` - social sharing preview image. The hero visual is built in HTML/CSS as a DFX stack, not a bitmap.
 - `README.md` - preview and deployment instructions.
 
 ## Editing Rules
@@ -41,6 +41,6 @@ First read `AGENTS.md` and `README.md`.
 Make this change: <describe the change>.
 Keep the site mobile friendly and GitHub Pages compatible.
 Do not edit files outside this repo.
-Verify the HTML, CSS, JS, and hero image still serve locally.
+Verify the HTML, CSS, JS, DFX hero visual, and OG card still serve locally.
 Summarize exactly what changed.
 ```

@@ -7,7 +7,23 @@
       name="description"
       content="Aditya Morey is a Senior Hardware Engineer at NVIDIA building DFX, DFT, scan debug, test access, and silicon observability platforms for AI and HPC hardware."
     />
-    <title>Aditya Morey | Portfolio</title>
+    <link rel="canonical" href="https://www.adityamorey.com/" />
+    <meta property="og:title" content="Aditya Morey - DFX for AI Silicon" />
+    <meta
+      property="og:description"
+      content="Senior DFX Methodology Engineer at NVIDIA. DFX platforms for AI/HPC silicon: scan debug, IEEE access, BIST, post-silicon bringup, and product-minded silicon observability."
+    />
+    <meta property="og:image" content="https://www.adityamorey.com/assets/og-card.png" />
+    <meta property="og:url" content="https://www.adityamorey.com/" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Aditya Morey - DFX for AI Silicon" />
+    <meta
+      name="twitter:description"
+      content="Senior DFX Methodology Engineer at NVIDIA building product-minded debug, test access, and observability platforms for AI/HPC silicon."
+    />
+    <meta name="twitter:image" content="https://www.adityamorey.com/assets/og-card.png" />
+    <title>Aditya Morey | DFX for AI Silicon</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -32,7 +48,13 @@
     <div class="scroll-progress" aria-hidden="true"></div>
 
     <nav class="site-nav" aria-label="Primary navigation">
-      <a class="nav-logo magnetic" href="#hero" aria-label="Go to home">AM</a>
+      <a class="nav-logo magnetic" href="#hero" aria-label="Go to home">
+        <svg viewBox="0 0 64 64" aria-hidden="true">
+          <rect width="64" height="64" rx="14"></rect>
+          <path d="M15 48 28 16h8l13 32h-8l-3-8H26l-3 8h-8Zm14-15h6l-3-9-3 9Z"></path>
+          <path d="M41 16h8v32h-8z"></path>
+        </svg>
+      </a>
       <div class="nav-links" id="nav-links">
         <a href="#about">About</a>
         <a href="#experience">Experience</a>
@@ -65,13 +87,16 @@
             <p class="eyebrow reveal-up">Hey there, I am</p>
             <h1 class="hero-title reveal-up">Aditya Morey.</h1>
             <p class="hero-statement reveal-up">
-              Senior DFX Methodology Engineer at NVIDIA building ASIC test, debug, and observability platforms
-              for AI/HPC silicon - from IEEE access and BIST to scan/RAM dump, secure debug, and product readiness.
+              I build DFX platforms for AI silicon - treating scan debug, JTAG, BIST, and silicon observability
+              as products with users, roadmaps, and measurable impact.
             </p>
-            <p class="hero-subtitle reveal-up">ASICs - AI hardware - DFX/DFT - IEEE 1149.1/1500/1687 - JTAG/IJTAG - product-oriented</p>
+            <p class="hero-subtitle reveal-up">
+              Senior DFX Methodology Engineer at NVIDIA. Previously Intel. Writing on AI hardware, agentic AI,
+              and the economics of usable intelligence.
+            </p>
 
             <div class="hero-actions reveal-up">
-              <a class="btn btn-primary magnetic" href="https://www.linkedin.com/in/adityamorey/" target="_blank" rel="noreferrer">
+              <a class="btn btn-primary magnetic" href="https://www.linkedin.com/in/adityamorey/" target="_blank" rel="noopener noreferrer">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"></path>
                   <path d="M2 9h4v12H2z"></path>
@@ -91,27 +116,53 @@
             </div>
 
             <div class="impact-strip reveal-up" aria-label="Impact highlights">
-              <div>
+              <a href="#nvidia-experience" aria-label="Jump to NVIDIA experience">
                 <strong>AI/HPC</strong>
                 <span>NVIDIA platforms</span>
-              </div>
-              <div>
-                <strong>20%</strong>
+              </a>
+              <a href="#intel-experience" aria-label="Jump to Intel SCAN efficiency impact">
+                <strong data-count="20" data-suffix="%">0%</strong>
                 <span>SCAN efficiency gain</span>
-              </div>
-              <div>
-                <strong>&lt;250</strong>
+              </a>
+              <a href="#intel-experience" aria-label="Jump to Intel DPPM defect-rate impact">
+                <strong data-count="250" data-prefix="&lt;">&lt;250</strong>
                 <span>DPPM defect-rate impact</span>
-              </div>
-              <div>
-                <strong>$1M+</strong>
+              </a>
+              <a href="#intel-experience" aria-label="Jump to Intel cost reduction impact">
+                <strong data-count="1" data-prefix="$" data-suffix="M+">$0M+</strong>
                 <span>annual cost reduction</span>
-              </div>
+              </a>
             </div>
           </div>
 
-          <div class="hero-visual reveal-up" aria-label="Abstract technology artwork">
-            <img src="assets/hero-technology.png" alt="Abstract luminous technology workstation" />
+          <div class="hero-visual reveal-up" aria-label="Animated DFX test-access stack">
+            <div class="dfx-stack" aria-hidden="true">
+              <div class="stack-rail"></div>
+              <div class="stack-node stack-node-control">
+                <span>Product Control</span>
+                <strong>Users / Roadmap / Impact</strong>
+              </div>
+              <div class="stack-node stack-node-tap">
+                <span>IEEE 1149.1 TAP</span>
+                <strong>Boundary access</strong>
+              </div>
+              <div class="stack-node stack-node-wrapper">
+                <span>IEEE 1500 Wrapper</span>
+                <strong>Core-level test</strong>
+              </div>
+              <div class="stack-node stack-node-ijtag">
+                <span>IEEE 1687 IJTAG</span>
+                <strong>Instrument network</strong>
+              </div>
+              <div class="stack-node stack-node-debug">
+                <span>Scan + RAM Dump</span>
+                <strong>Post-silicon visibility</strong>
+              </div>
+              <div class="stack-node stack-node-ate">
+                <span>ATE + Bringup</span>
+                <strong>Quality at scale</strong>
+              </div>
+            </div>
             <div class="metric-panel top-left">
               <strong>5K+</strong>
               <span>Network</span>
@@ -181,7 +232,7 @@
           </div>
 
           <div class="timeline">
-            <article class="experience-card reveal-up">
+            <article class="experience-card reveal-up" id="nvidia-experience">
               <div class="experience-meta">
                 <p>Dec 2024 - Present</p>
                 <h3>NVIDIA Corporation</h3>
@@ -204,7 +255,7 @@
               </div>
             </article>
 
-            <article class="experience-card reveal-up">
+            <article class="experience-card reveal-up" id="intel-experience">
               <div class="experience-meta">
                 <p>Nov 2021 - Dec 2024</p>
                 <h3>Intel Corporation</h3>
@@ -296,7 +347,7 @@
             <article class="project-card magnetic reveal-up">
               <div class="project-topline">
                 <span>Enterprise AI</span>
-                <a href="https://www.linkedin.com/in/adityamorey/" target="_blank" rel="noreferrer" aria-label="Open LinkedIn articles">
+                <a href="https://www.linkedin.com/pulse/why-most-enterprise-ai-investments-quietly-failing-aditya-morey-yh0fc" target="_blank" rel="noopener noreferrer" aria-label="Open enterprise AI article">
                   <svg viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M7 17 17 7"></path>
                     <path d="M8 7h9v9"></path>
@@ -318,7 +369,7 @@
             <article class="project-card magnetic reveal-up">
               <div class="project-topline">
                 <span>Agentic AI</span>
-                <a href="https://www.linkedin.com/in/adityamorey/" target="_blank" rel="noreferrer" aria-label="Open LinkedIn articles">
+                <a href="https://www.linkedin.com/pulse/reinventing-visual-data-processing-inside-nvidias-cosmos-aditya-morey-q8idc" target="_blank" rel="noopener noreferrer" aria-label="Open NVIDIA COSMOS article">
                   <svg viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M7 17 17 7"></path>
                     <path d="M8 7h9v9"></path>
@@ -340,7 +391,7 @@
             <article class="project-card magnetic reveal-up">
               <div class="project-topline">
                 <span>Infrastructure</span>
-                <a href="https://www.linkedin.com/pulse/nvidia-hits-4-trillion-case-study-strategic-resilience-aditya-morey-evayc" target="_blank" rel="noreferrer" aria-label="Open NVIDIA strategy article">
+                <a href="https://www.linkedin.com/pulse/nvidia-hits-4-trillion-case-study-strategic-resilience-aditya-morey-evayc" target="_blank" rel="noopener noreferrer" aria-label="Open NVIDIA strategy article">
                   <svg viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M7 17 17 7"></path>
                     <path d="M8 7h9v9"></path>
@@ -437,7 +488,7 @@
                 </svg>
                 <span>adityamorey1723@gmail.com</span>
               </a>
-              <a class="contact-link magnetic" href="https://www.linkedin.com/in/adityamorey/" target="_blank" rel="noreferrer">
+              <a class="contact-link magnetic" href="https://www.linkedin.com/in/adityamorey/" target="_blank" rel="noopener noreferrer">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"></path>
                   <path d="M2 9h4v12H2z"></path>
@@ -445,7 +496,7 @@
                 </svg>
                 <span>linkedin.com/in/adityamorey</span>
               </a>
-              <a class="contact-link magnetic" href="https://www.linkedin.com/in/adityamorey/recent-activity/articles/" target="_blank" rel="noreferrer">
+              <a class="contact-link magnetic" href="https://www.linkedin.com/in/adityamorey/recent-activity/articles/" target="_blank" rel="noopener noreferrer">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
                   <path d="M4 4v15.5"></path>
@@ -453,7 +504,7 @@
                 </svg>
                 <span>Read Aditya's articles</span>
               </a>
-              <a class="contact-link magnetic" href="https://www.linkedin.com/in/adityamorey/" target="_blank" rel="noreferrer">
+              <a class="contact-link magnetic" href="https://www.linkedin.com/in/adityamorey/" target="_blank" rel="noopener noreferrer">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M21 10c0 7-9 12-9 12S3 17 3 10a9 9 0 0 1 18 0z"></path>
                   <path d="M12 10h.01"></path>
@@ -488,7 +539,7 @@
       </div>
     </footer>
 
-    <button class="chat-toggle magnetic" id="chat-toggle" type="button" aria-label="Open portfolio assistant">
+    <button class="chat-toggle magnetic" id="chat-toggle" type="button" aria-label="Open quick facts">
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path>
       </svg>
@@ -497,13 +548,13 @@
     <aside class="chat-panel" id="chat-panel" aria-hidden="true">
       <div class="chat-header">
         <div>
-          <p>Portfolio Assistant</p>
-          <span>Quick answers</span>
+          <p>Quick Facts</p>
+          <span>Curated answers</span>
         </div>
-        <button type="button" id="chat-close" aria-label="Close portfolio assistant">x</button>
+        <button type="button" id="chat-close" aria-label="Close quick facts">x</button>
       </div>
       <div class="chat-log" id="chat-log">
-        <p class="bot-message">Ask about work, writing, skills, or contact.</p>
+        <p class="bot-message" tabindex="-1">Pick a topic for the sharp version: work, writing, skills, or contact.</p>
       </div>
       <div class="chat-prompts">
         <button type="button" data-answer="work">Work</button>

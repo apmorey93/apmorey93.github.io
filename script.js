@@ -17,13 +17,18 @@ const canvas = $("#ambient-canvas");
 const ctx = canvas.getContext("2d");
 
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const preloaderStartedAt = performance.now();
+let preloaderHidden = false;
 
 const hidePreloader = () => {
-  window.setTimeout(() => preloader?.classList.add("done"), 300);
+  if (preloaderHidden) return;
+  preloaderHidden = true;
+  const remainingTime = Math.max(0, 900 - (performance.now() - preloaderStartedAt));
+  window.setTimeout(() => preloader?.classList.add("done"), remainingTime);
 };
 
 window.addEventListener("load", hidePreloader);
-document.addEventListener("DOMContentLoaded", () => window.setTimeout(hidePreloader, 1200));
+document.addEventListener("DOMContentLoaded", hidePreloader);
 
 const setMenu = (isOpen) => {
   navToggle.classList.toggle("open", isOpen);
@@ -91,6 +96,50 @@ const revealObserver = new IntersectionObserver(
 
 $$(".reveal-up").forEach((element) => revealObserver.observe(element));
 
+const formatCounter = (counter, value) => {
+  const prefix = counter.dataset.prefix || "";
+  const suffix = counter.dataset.suffix || "";
+  return `${prefix}${Math.round(value)}${suffix}`;
+};
+
+const animateCounter = (counter) => {
+  const target = Number(counter.dataset.count);
+  if (!Number.isFinite(target)) return;
+
+  if (reducedMotion) {
+    counter.textContent = formatCounter(counter, target);
+    return;
+  }
+
+  const start = performance.now();
+  const duration = 900;
+
+  const tick = (now) => {
+    const progressValue = Math.min(1, (now - start) / duration);
+    const eased = 1 - Math.pow(1 - progressValue, 3);
+    counter.textContent = formatCounter(counter, target * eased);
+
+    if (progressValue < 1) {
+      requestAnimationFrame(tick);
+    }
+  };
+
+  requestAnimationFrame(tick);
+};
+
+const counterObserver = new IntersectionObserver(
+  (entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      animateCounter(entry.target);
+      counterObserver.unobserve(entry.target);
+    });
+  },
+  { threshold: 0.7 }
+);
+
+$$("[data-count]").forEach((counter) => counterObserver.observe(counter));
+
 const sections = $$("main section[id]");
 const navLinks = $$(".nav-links a");
 
@@ -127,7 +176,10 @@ $$(".project-card").forEach((card) => {
 resumeOpen?.addEventListener("click", () => {
   if (typeof resumeModal.showModal === "function") {
     resumeModal.showModal();
+    return;
   }
+
+  window.location.href = "mailto:adityamorey1723@gmail.com?subject=Resume%20request";
 });
 
 
@@ -146,6 +198,7 @@ const appendMessage = (text, type = "bot") => {
   const message = document.createElement("p");
   message.className = type === "user" ? "user-message" : "bot-message";
   message.textContent = text;
+  if (type !== "user") message.tabIndex = -1;
   chatLog.appendChild(message);
   chatLog.scrollTop = chatLog.scrollHeight;
 };
@@ -153,6 +206,14 @@ const appendMessage = (text, type = "bot") => {
 const setChat = (isOpen) => {
   chatPanel.classList.toggle("open", isOpen);
   chatPanel.setAttribute("aria-hidden", String(!isOpen));
+
+  window.setTimeout(() => {
+    if (isOpen) {
+      chatLog.querySelector(".bot-message")?.focus({ preventScroll: true });
+    } else {
+      chatToggle?.focus({ preventScroll: true });
+    }
+  }, 0);
 };
 
 chatToggle?.addEventListener("click", () => {
@@ -178,6 +239,7 @@ let particles = [];
 let width = 0;
 let height = 0;
 let pixelRatio = 1;
+let animationFrameId = 0;
 
 const createParticles = () => {
   const count = Math.min(96, Math.max(42, Math.floor((width * height) / 22000)));
@@ -203,7 +265,10 @@ const resizeCanvas = () => {
   createParticles();
 };
 
+const shouldAnimateCanvas = () => !reducedMotion && document.visibilityState === "visible";
+
 const drawCanvas = () => {
+  animationFrameId = 0;
   ctx.clearRect(0, 0, width, height);
   ctx.fillStyle = "rgba(5, 6, 6, 0.52)";
   ctx.fillRect(0, 0, width, height);
@@ -249,8 +314,14 @@ const drawCanvas = () => {
     ctx.fill();
   });
 
-  if (!reducedMotion) {
-    requestAnimationFrame(drawCanvas);
+  if (shouldAnimateCanvas()) {
+    animationFrameId = requestAnimationFrame(drawCanvas);
+  }
+};
+
+const startCanvas = () => {
+  if (!animationFrameId) {
+    animationFrameId = requestAnimationFrame(drawCanvas);
   }
 };
 
@@ -258,6 +329,10 @@ window.addEventListener("resize", resizeCanvas);
 window.addEventListener("pointermove", (event) => {
   pointer.x = event.clientX;
   pointer.y = event.clientY;
+});
+
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") startCanvas();
 });
 
 resizeCanvas();
