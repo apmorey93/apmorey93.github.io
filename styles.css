@@ -902,11 +902,17 @@ body.cursor-active .cursor-dot {
 }
 
 .reveal-up {
+  opacity: 1;
+  transform: none;
+}
+
+.motion-ready .reveal-up {
   opacity: 0;
   transform: translateY(24px);
   transition: opacity 700ms ease, transform 700ms var(--ease);
 }
 
+.motion-ready .reveal-up.visible,
 .reveal-up.visible {
   opacity: 1;
   transform: translateY(0);
@@ -1023,7 +1029,8 @@ body.cursor-active .cursor-dot {
     transition-duration: 0.01ms !important;
   }
 
-  .reveal-up {
+  .reveal-up,
+  .motion-ready .reveal-up {
     opacity: 1;
     transform: none;
   }
