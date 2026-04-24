@@ -230,6 +230,7 @@ svg {
 .section-header,
 .copy-stack,
 .system-card,
+.compute-cell-wrapper,
 .artifact-card,
 .timeline,
 .contact-panel,
@@ -255,6 +256,10 @@ svg {
 .register-grid dt,
 .register-grid dd,
 .artifact-link,
+.compute-cell-wrapper,
+.compute-header,
+.telemetry-grid,
+.compute-status,
 .contact-panel,
 .site-footer,
 .modal-close {
@@ -462,6 +467,98 @@ svg {
   margin: 22px 0 0;
 }
 
+.compute-grid {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.38fr) minmax(0, 1fr);
+}
+
+.compute-cell-wrapper {
+  min-height: 520px;
+  border-top: 0;
+  border-right: 0;
+}
+
+.compute-header {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.compute-body {
+  display: grid;
+  grid-template-columns: minmax(320px, 0.9fr) minmax(300px, 0.75fr);
+  min-height: 360px;
+}
+
+#compute-canvas {
+  width: 100%;
+  height: 100%;
+  min-height: 360px;
+  border: 0;
+  border-right: 1px solid var(--line);
+  background: #020202;
+  image-rendering: pixelated;
+}
+
+.telemetry-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.telemetry-grid div {
+  min-height: 120px;
+  padding: 18px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  color: var(--quiet);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.telemetry-grid div:nth-child(2n) {
+  border-right: 0;
+}
+
+.telemetry-grid span,
+.compute-status strong {
+  display: block;
+  margin-top: 10px;
+  color: var(--amber);
+  font-size: 0.86rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.compute-status {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.compute-status button {
+  min-height: 42px;
+  padding: 0 16px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.compute-status button:disabled {
+  color: var(--quiet);
+  cursor: wait;
+}
+
 .artifact-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -504,6 +601,7 @@ svg {
 }
 
 .artifact-link:hover,
+.compute-status button:hover:not(:disabled),
 .contact-panel a:hover,
 .contact-panel button:hover {
   color: #030608;
@@ -518,6 +616,40 @@ svg {
   color: var(--text);
   font-family: var(--font-mono);
   font-size: 0.92rem;
+}
+
+.math-block svg {
+  width: min(100%, 860px);
+  min-width: 680px;
+  height: auto;
+  color: var(--text);
+}
+
+.math-block path {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+}
+
+.math-block text {
+  fill: currentColor;
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
+.math-compiler-meta {
+  margin-top: 14px;
+  color: var(--quiet);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.math-error {
+  color: var(--amber);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
 }
 
 .archive-grid {
@@ -701,6 +833,7 @@ svg {
 @media (max-width: 1100px) {
   .hero-grid,
   .split-grid,
+  .compute-grid,
   .contact-grid {
     grid-template-columns: 1fr;
   }
@@ -708,6 +841,7 @@ svg {
   .hero-copy,
   .hero-panel,
   .copy-stack,
+  .compute-cell-wrapper,
   .timeline,
   .contact-panel {
     border-right: 0;
@@ -769,6 +903,7 @@ svg {
 
   .metric-strip,
   .system-grid,
+  .compute-body,
   .artifact-grid,
   .archive-grid,
   .register-grid {
@@ -778,12 +913,26 @@ svg {
   .metric-strip a,
   .register-grid div,
   .system-card,
+  #compute-canvas,
   .artifact-card {
     border-right: 0;
   }
 
+  #compute-canvas {
+    border-bottom: 1px solid var(--line);
+  }
+
   .section-header h2 {
     font-size: 2.2rem;
+  }
+
+  .telemetry-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .telemetry-grid div {
+    min-height: 92px;
+    border-right: 0;
   }
 
   .timeline-row {
@@ -806,6 +955,14 @@ svg {
 
   .section-header h2 {
     font-size: 1.9rem;
+  }
+
+  .compute-status {
+    display: grid;
+  }
+
+  .compute-status button {
+    width: 100%;
   }
 
   .contact-panel a,

@@ -32,18 +32,6 @@
     />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="styles.css" />
-    <script>
-      window.MathJax = {
-        tex: {
-          inlineMath: [["\\(", "\\)"]],
-          displayMath: [["$$", "$$"]]
-        },
-        svg: {
-          fontCache: "global"
-        }
-      };
-    </script>
-    <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
     <noscript>
       <style>
         .reveal-up {
@@ -61,6 +49,7 @@
       <div class="nav-links" id="nav-links">
         <a href="#signal">Signal</a>
         <a href="#systems">Systems</a>
+        <a href="#compute">Compute</a>
         <a href="#artifacts">Artifacts</a>
         <a href="#trajectory">Trajectory</a>
         <a href="#contact">Contact</a>
@@ -74,6 +63,7 @@
     <div class="mobile-menu" id="mobile-menu" aria-hidden="true">
       <a href="#signal">Signal</a>
       <a href="#systems">Systems</a>
+      <a href="#compute">Compute</a>
       <a href="#artifacts">Artifacts</a>
       <a href="#trajectory">Trajectory</a>
       <a href="#contact">Contact</a>
@@ -216,10 +206,38 @@
         </div>
       </section>
 
+      <section class="section compute-section" id="compute">
+        <div class="section-grid compute-grid">
+          <header class="section-header reveal-up">
+            <p class="section-index">03 / INTERACTIVE LOGIC</p>
+            <h2>Client-Side Compute, Exposed.</h2>
+          </header>
+
+          <div class="compute-cell-wrapper reveal-up" aria-label="Silicon compute telemetry">
+            <div class="compute-header">[TARGET]: WebGPU Matrix Multiplication</div>
+            <div class="compute-body">
+              <canvas id="compute-canvas" width="512" height="160" aria-label="Matrix output signature"></canvas>
+              <div class="telemetry-grid">
+                <div>BACKEND: <span id="gpu-status">INITIALIZING...</span></div>
+                <div>MATRIX: <span id="matrix-size">--</span></div>
+                <div>BUFFER: <span id="buffer-size">--</span> MB</div>
+                <div>WORKGROUPS: <span id="workgroup-count">--</span></div>
+                <div>DISPATCH: <span id="dispatch-time">--</span> ms</div>
+                <div>CHECKSUM: <span id="compute-checksum">--</span></div>
+              </div>
+            </div>
+            <div class="compute-status">
+              <span>ESTIMATED GFLOP/s: <strong id="gflops">--</strong></span>
+              <button type="button" id="compute-rerun">REPLAY_KERNEL</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section class="section artifacts-section" id="artifacts">
         <div class="section-grid">
           <header class="section-header reveal-up">
-            <p class="section-index">03 / IDEAS &amp; ARTIFACTS</p>
+            <p class="section-index">04 / IDEAS &amp; ARTIFACTS</p>
             <h2>Ideas &amp; Artifacts</h2>
           </header>
 
@@ -231,7 +249,7 @@
               </div>
               <h3>The Cost of Usable Intelligence: A Unified Framework for Measuring AI's Economic Productivity Frontier</h3>
               <p>
-                A formal economic framework translating engineering QoS (Quality of Service) constraints into measurable economic impact. This paper introduces the Locational Cost of Intelligence and an intelligence price deflator, providing a structured approach to valuing AI compute output beyond raw FLOPS. It bridges the gap between hardware execution—specifically memory bandwidth and cache utilization—and macro-economic utility.
+                A formal economic framework translating engineering QoS (Quality of Service) constraints into measurable economic impact. This paper introduces the Locational Cost of Intelligence and an intelligence price deflator, providing a structured approach to valuing AI compute output beyond raw FLOPS. It bridges the gap between hardware execution - specifically memory bandwidth and cache utilization - and macro-economic utility.
               </p>
               <a class="artifact-link" href="https://papers.ssrn.com/sol3/results.cfm?txtKey_Words=The%20Cost%20of%20Usable%20Intelligence" target="_blank" rel="noopener noreferrer">Link to SSRN Manuscript [External]</a>
             </article>
@@ -246,8 +264,11 @@
                 A continual learning architecture designed to mitigate catastrophic forgetting in large language models. Standard fine-tuning paradigms degrade foundational weights. NeAd introduces a nested topological approach to parameter-efficient fine-tuning, allowing models to acquire novel domain specificities without destroying the base heuristic.
               </p>
               <p>The core regularization objective ensures parameter stability across sequential task acquisition:</p>
-              <div class="math-block">
-                $$\mathcal{L}_{NeAd} = \mathcal{L}_{task}(\theta_{base}, \phi_{new}) + \lambda \sum_{i} ||\phi_{new}^{(i)} - \phi_{old}^{(i)}||^2$$
+              <div
+                class="math-block"
+                data-math="\mathcal{L}_{NeAd} = \mathcal{L}_{task}(\theta_{base}, \phi_{new}) + \lambda \sum_{i} ||\phi_{new}^{(i)} - \phi_{old}^{(i)}||^2"
+              >
+                <span>COMPILING_FORMULA...</span>
               </div>
               <p>Full architecture documentation available upon technical review.</p>
             </article>
@@ -302,7 +323,7 @@
       <section class="section" id="trajectory">
         <div class="section-grid split-grid">
           <header class="section-header reveal-up">
-            <p class="section-index">04 / TRAJECTORY</p>
+            <p class="section-index">05 / TRAJECTORY</p>
             <h2>Execution History.</h2>
           </header>
 
@@ -355,7 +376,7 @@
       <section class="section contact" id="contact">
         <div class="section-grid contact-grid">
           <header class="section-header reveal-up">
-            <p class="section-index">05 / CONTACT</p>
+            <p class="section-index">06 / CONTACT</p>
             <h2>Discuss AI Hardware, DFX, Or Intelligence Infrastructure.</h2>
           </header>
 
