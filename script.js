@@ -8,10 +8,6 @@ const cursorDot = $(".cursor-dot");
 const cursorRing = $(".cursor-ring");
 const resumeOpen = $("#resume-open");
 const resumeModal = $("#resume-modal");
-const chatToggle = $("#chat-toggle");
-const chatPanel = $("#chat-panel");
-const chatClose = $("#chat-close");
-const chatLog = $("#chat-log");
 const canvas = $("#ambient-canvas");
 const ctx = canvas.getContext("2d");
 
@@ -169,53 +165,6 @@ resumeOpen?.addEventListener("click", () => {
 });
 
 
-const chatAnswers = {
-  work:
-    "Aditya is a Senior DFX Methodology Engineer at NVIDIA building ASIC DFT/DFX, IEEE test access, BIST, scan/RAM dump, secure debug, and post-silicon debug flows for AI/HPC platforms.",
-  projects:
-    "His writing connects simulation-first physical AI, usable intelligence economics, AI platforms, robotics, NVIDIA strategy, MCP, quantum computing, and infrastructure economics.",
-  skills:
-    "Core strengths: DFX methodology, DFT/ATE, IEEE 1149.1/1500/1687, JTAG/IJTAG, MBIST, scan debug, RTL verification, TCL, Perl, Python, C#, JMP, and product development.",
-  contact:
-    "For AI hardware, DFX/DFT, silicon debug, post-silicon validation, product-platform, or AI infrastructure PM conversations, email adityamorey1723@gmail.com or connect on LinkedIn."
-};
-
-const appendMessage = (text, type = "bot") => {
-  const message = document.createElement("p");
-  message.className = type === "user" ? "user-message" : "bot-message";
-  message.textContent = text;
-  if (type !== "user") message.tabIndex = -1;
-  chatLog.appendChild(message);
-  chatLog.scrollTop = chatLog.scrollHeight;
-};
-
-const setChat = (isOpen) => {
-  chatPanel.classList.toggle("open", isOpen);
-  chatPanel.setAttribute("aria-hidden", String(!isOpen));
-
-  window.setTimeout(() => {
-    if (isOpen) {
-      chatLog.querySelector(".bot-message")?.focus({ preventScroll: true });
-    } else {
-      chatToggle?.focus({ preventScroll: true });
-    }
-  }, 0);
-};
-
-chatToggle?.addEventListener("click", () => {
-  setChat(!chatPanel.classList.contains("open"));
-});
-
-chatClose?.addEventListener("click", () => setChat(false));
-
-$$("[data-answer]").forEach((button) => {
-  button.addEventListener("click", () => {
-    const key = button.dataset.answer;
-    appendMessage(button.textContent, "user");
-    window.setTimeout(() => appendMessage(chatAnswers[key]), 180);
-  });
-});
-
 const pointer = {
   x: window.innerWidth * 0.5,
   y: window.innerHeight * 0.5
@@ -235,7 +184,7 @@ const createParticles = () => {
     vx: (Math.random() - 0.5) * 0.42,
     vy: (Math.random() - 0.5) * 0.42,
     depth: Math.random() * 0.8 + 0.2,
-    hue: Math.random() > 0.72 ? "255, 193, 90" : "86, 229, 255"
+    hue: Math.random() > 0.78 ? "244, 245, 241" : "138, 223, 255"
   }));
 };
 

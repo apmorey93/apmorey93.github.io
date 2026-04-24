@@ -6,8 +6,8 @@ This is Aditya Morey's static personal portfolio. It is intentionally simple: HT
 
 - `index.html` - page content, sections, SEO title/description, links.
 - `styles.css` - visual design, responsive layout, mobile rules, colors, spacing.
-- `script.js` - interactions: cursor, scroll progress, mobile menu, chat widget, canvas background.
-- `assets/aditya-morey-portrait.jpg` - optimized portrait used in the hero.
+- `script.js` - interactions: cursor, scroll progress, mobile menu, canvas background.
+- `assets/aditya-morey-editorial.jpg` - high-contrast monochrome portrait used in the hero.
 - `assets/og-card.jpg` - social sharing preview image with portrait and silicon/AI visual treatment.
 - `README.md` - preview and deployment instructions.
 
