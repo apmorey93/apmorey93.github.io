@@ -5,33 +5,45 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Aditya Morey is a Senior Hardware Engineer at NVIDIA building DFX, DFT, scan debug, test access, and silicon observability platforms for AI and HPC hardware."
+      content="Aditya Morey is a Senior AI Hardware DFX Engineer at NVIDIA building silicon debug, test access, scan, BIST, and observability infrastructure for AI and HPC hardware."
     />
     <link rel="canonical" href="https://www.adityamorey.com/" />
-    <meta property="og:title" content="Aditya Morey - DFX for AI Silicon" />
+    <meta property="og:title" content="Aditya Morey - AI Hardware DFX" />
     <meta
       property="og:description"
-      content="Senior DFX Methodology Engineer at NVIDIA. DFX platforms for AI/HPC silicon: scan debug, IEEE access, BIST, post-silicon bringup, and product-minded silicon observability."
+      content="Senior AI Hardware DFX Engineer at NVIDIA. Silicon debug, test access, scan, BIST, post-silicon bringup, and ideas on the economics of usable intelligence."
     />
     <meta property="og:image" content="https://www.adityamorey.com/assets/og-card.jpg" />
     <meta property="og:url" content="https://www.adityamorey.com/" />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Aditya Morey - DFX for AI Silicon" />
+    <meta name="twitter:title" content="Aditya Morey - AI Hardware DFX" />
     <meta
       name="twitter:description"
-      content="Senior DFX Methodology Engineer at NVIDIA building product-minded debug, test access, and observability platforms for AI/HPC silicon."
+      content="Senior AI Hardware DFX Engineer at NVIDIA building silicon-grade debug and observability infrastructure for AI/HPC systems."
     />
     <meta name="twitter:image" content="https://www.adityamorey.com/assets/og-card.jpg" />
-    <title>Aditya Morey | DFX for AI Silicon</title>
+    <title>Aditya Morey | AI Hardware DFX</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600;700&display=swap"
       rel="stylesheet"
     />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="styles.css" />
+    <script>
+      window.MathJax = {
+        tex: {
+          inlineMath: [["\\(", "\\)"]],
+          displayMath: [["$$", "$$"]]
+        },
+        svg: {
+          fontCache: "global"
+        }
+      };
+    </script>
+    <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
     <noscript>
       <style>
         .reveal-up {
@@ -42,500 +54,337 @@
     </noscript>
   </head>
   <body>
-    <div class="cursor-dot" aria-hidden="true"></div>
-    <div class="cursor-ring" aria-hidden="true"></div>
     <div class="scroll-progress" aria-hidden="true"></div>
 
     <nav class="site-nav" aria-label="Primary navigation">
-      <a class="nav-logo magnetic" href="#hero" aria-label="Go to home">
-        <svg viewBox="0 0 64 64" aria-hidden="true">
-          <rect width="64" height="64" rx="14"></rect>
-          <path d="M15 48 28 16h8l13 32h-8l-3-8H26l-3 8h-8Zm14-15h6l-3-9-3 9Z"></path>
-          <path d="M41 16h8v32h-8z"></path>
-        </svg>
-      </a>
+      <a class="nav-mark" href="#hero" aria-label="Go to home">AM//DFX</a>
       <div class="nav-links" id="nav-links">
-        <a href="#about">About</a>
-        <a href="#experience">Experience</a>
-        <a href="#projects">Writing</a>
-        <a href="#education">Education</a>
-        <a href="#wins">Wins</a>
+        <a href="#signal">Signal</a>
+        <a href="#systems">Systems</a>
+        <a href="#artifacts">Artifacts</a>
+        <a href="#trajectory">Trajectory</a>
         <a href="#contact">Contact</a>
       </div>
-      <button class="nav-toggle magnetic" type="button" aria-label="Open menu" aria-expanded="false">
+      <button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false">
         <span></span>
         <span></span>
       </button>
     </nav>
 
     <div class="mobile-menu" id="mobile-menu" aria-hidden="true">
-      <a href="#about">About</a>
-      <a href="#experience">Experience</a>
-      <a href="#projects">Writing</a>
-      <a href="#education">Education</a>
-      <a href="#wins">Wins</a>
+      <a href="#signal">Signal</a>
+      <a href="#systems">Systems</a>
+      <a href="#artifacts">Artifacts</a>
+      <a href="#trajectory">Trajectory</a>
       <a href="#contact">Contact</a>
     </div>
 
-    <canvas id="ambient-canvas" aria-hidden="true"></canvas>
-
     <main>
       <section class="section hero" id="hero">
-        <div class="container hero-layout">
-          <div class="hero-copy">
-            <p class="eyebrow reveal-up">DFX / AI Silicon / Product Systems</p>
-            <h1 class="hero-title reveal-up">Aditya Morey.</h1>
-            <p class="hero-statement reveal-up">
-              I build DFX platforms for AI silicon - treating scan debug, JTAG, BIST, and silicon observability
-              as products with users, roadmaps, and measurable impact.
+        <div class="section-grid hero-grid">
+          <div class="hero-copy reveal-up">
+            <p class="metadata-line">[NVIDIA // SENIOR AI HARDWARE DFX ENGINEER]</p>
+            <h1>Aditya Morey builds silicon observability systems for the AI compute stack.</h1>
+            <p class="hero-lead">
+              DFX is not a support function. It is the diagnostic nervous system of modern AI hardware:
+              scan, JTAG/IJTAG, BIST, secure debug, post-silicon bringup, and the hard interface between
+              physical execution and product-grade reliability.
             </p>
-            <p class="hero-subtitle reveal-up">
-              Senior DFX Methodology Engineer at NVIDIA. Previously Intel. Writing on AI hardware, agentic AI,
-              and the economics of usable intelligence.
-            </p>
-
-            <div class="hero-actions reveal-up">
-              <a class="btn btn-primary magnetic" href="https://www.linkedin.com/in/adityamorey/" target="_blank" rel="noopener noreferrer">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"></path>
-                  <path d="M2 9h4v12H2z"></path>
-                  <path d="M4 4h.01"></path>
-                </svg>
-                <span>Connect on LinkedIn</span>
-              </a>
-              <button class="btn btn-ghost magnetic" type="button" id="resume-open">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"></path>
-                  <path d="M14 2v5h5"></path>
-                  <path d="M9 13h6"></path>
-                  <path d="M9 17h6"></path>
-                </svg>
-                <span>Resume</span>
-              </button>
-            </div>
-
-            <div class="impact-strip reveal-up" aria-label="Impact highlights">
-              <a href="#nvidia-experience" aria-label="Jump to NVIDIA experience">
-                <strong>AI/HPC</strong>
-                <span>NVIDIA platforms</span>
-              </a>
-              <a href="#intel-experience" aria-label="Jump to Intel SCAN efficiency impact">
-                <strong data-count="20" data-suffix="%">0%</strong>
-                <span>SCAN efficiency gain</span>
-              </a>
-              <a href="#intel-experience" aria-label="Jump to Intel DPPM defect-rate impact">
-                <strong data-count="250" data-prefix="&lt;">&lt;250</strong>
-                <span>DPPM defect-rate impact</span>
-              </a>
-              <a href="#intel-experience" aria-label="Jump to Intel cost reduction impact">
-                <strong data-count="1" data-prefix="$" data-suffix="M+">$0M+</strong>
-                <span>annual cost reduction</span>
-              </a>
-            </div>
           </div>
 
-          <div class="hero-visual portrait-hero reveal-up" aria-label="Portrait of Aditya Morey with an AI silicon themed background">
-            <div class="silicon-backdrop" aria-hidden="true">
-              <span></span>
-              <span></span>
-              <span></span>
-              <span></span>
-              <span></span>
-              <span></span>
+          <aside class="hero-panel reveal-up" aria-label="Operating profile">
+            <div class="portrait-block">
+              <img
+                src="assets/aditya-morey-editorial.jpg"
+                alt="Aditya Morey"
+                width="980"
+                height="1106"
+                fetchpriority="high"
+                decoding="async"
+              />
             </div>
-            <div class="portrait-frame">
-              <img class="hero-portrait" src="assets/aditya-morey-editorial.jpg" alt="Aditya Morey" width="980" height="1106" fetchpriority="high" decoding="async" />
-            </div>
-            <div class="profile-chip chip-top">
-              <span>AI/HPC Silicon</span>
-            </div>
-            <div class="profile-chip chip-bottom">
-              <span>DFX / Silicon Debug / Product</span>
-            </div>
+            <dl class="register-grid">
+              <div>
+                <dt>DOMAIN</dt>
+                <dd>AI/HPC Silicon</dd>
+              </div>
+              <div>
+                <dt>STACK</dt>
+                <dd>DFX / DFT / ATE</dd>
+              </div>
+              <div>
+                <dt>PROTOCOLS</dt>
+                <dd>1149.1 / 1500 / 1687</dd>
+              </div>
+              <div>
+                <dt>MODE</dt>
+                <dd>Debug Infrastructure</dd>
+              </div>
+            </dl>
+          </aside>
+
+          <div class="metric-strip reveal-up" aria-label="Impact metrics">
+            <a href="#systems">
+              <span>SCAN_EFFICIENCY</span>
+              <strong data-count="20" data-suffix="%">20%</strong>
+            </a>
+            <a href="#systems">
+              <span>DEFECT_RATE_TARGET</span>
+              <strong data-count="250" data-prefix="&lt;">&lt;250</strong>
+            </a>
+            <a href="#systems">
+              <span>COST_REDUCTION</span>
+              <strong data-count="1" data-prefix="$" data-suffix="M+">$1M+</strong>
+            </a>
+            <a href="#artifacts">
+              <span>RESEARCH_VECTOR</span>
+              <strong>LCI</strong>
+            </a>
           </div>
         </div>
       </section>
 
-      <section class="section" id="about">
-        <div class="container">
-          <div class="section-header">
-            <span>01</span>
-            <h2 class="reveal-up">About Me</h2>
-          </div>
-          <div class="about-grid">
-            <div class="about-copy reveal-up">
-              <p class="lead">
-                I operate at the elite intersection of AI hardware, DFX, DFT, ATE, post-silicon validation,
-                scan debug, and product-minded platform engineering.
-              </p>
-              <p>
-                At NVIDIA, I build methodology and debug infrastructure for AI/HPC platforms: IEEE 1149.1,
-                IEEE 1500, IEEE 1687, JTAG/IJTAG, IO BIST, memory BIST, scan dump, RAM dump, DFD, and secure
-                DFX flows that make world-class silicon easier to verify, bring up, debug, and productize.
-              </p>
-              <p>
-                My product angle is simple: internal hardware platforms still have users, workflows, adoption,
-                reliability, and measurable business impact. I define users, write crisp requirements, prioritize
-                roadmaps, ship increments, and iterate until the workflow becomes boringly reliable at scale.
-              </p>
-              <p>
-                I am especially interested in Product Management roles in AI hardware and AI infrastructure -
-                platform products at the boundary of silicon, systems, and developer workflows where deep hardware
-                context and cross-team execution are decisive.
-              </p>
-            </div>
-            <div class="skill-cloud reveal-up" aria-label="Skill set">
-              <span>DFX Methodology</span>
-              <span>DFT/ATE</span>
-              <span>JTAG / IJTAG</span>
-              <span>IEEE 1149.1 / 1500 / 1687</span>
-              <span>Post-Silicon Validation</span>
-              <span>Scan Debug</span>
-              <span>BIST</span>
-              <span>RTL Design</span>
-              <span>Python / Perl / C#</span>
-              <span>JMP Data Analysis</span>
-              <span>PFMEA</span>
-              <span>Product Development</span>
-              <span>Lean Six Sigma Yellow Belt</span>
-              <span>TCL</span>
-              <span>RTL Verification</span>
-            </div>
+      <section class="section" id="signal">
+        <div class="section-grid split-grid">
+          <header class="section-header reveal-up">
+            <p class="section-index">01 / SIGNAL</p>
+            <h2>Technical Prowess, Exposed At The Interface.</h2>
+          </header>
+          <div class="copy-stack reveal-up">
+            <p class="lead">
+              I operate at the intersection of AI hardware, DFX, DFT, ATE, post-silicon validation,
+              scan debug, and product-minded platform engineering.
+            </p>
+            <p>
+              At NVIDIA, I build methodology and debug infrastructure for AI/HPC platforms: IEEE 1149.1,
+              IEEE 1500, IEEE 1687, JTAG/IJTAG, IO BIST, memory BIST, scan dump, RAM dump, DFD, and secure
+              DFX flows that make world-class silicon easier to verify, bring up, debug, and productize.
+            </p>
+            <p>
+              My product angle is simple: internal hardware platforms still have users, workflows, adoption,
+              reliability, and measurable business impact. The best infrastructure disappears into the work,
+              leaving behind faster diagnosis, cleaner requirements, and fewer unknowns at scale.
+            </p>
           </div>
         </div>
       </section>
 
-      <section class="section" id="experience">
-        <div class="container">
-          <div class="section-header">
-            <span>02</span>
-            <h2 class="reveal-up">Experience</h2>
+      <section class="section" id="systems">
+        <div class="section-grid">
+          <header class="section-header reveal-up">
+            <p class="section-index">02 / SYSTEMS</p>
+            <h2>Hardware Debug As Mission-Critical Infrastructure.</h2>
+          </header>
+
+          <div class="system-grid">
+            <article class="system-card reveal-up">
+              <p class="metadata-line">[CURRENT // NVIDIA]</p>
+              <h3>AI/HPC DFX Methodology</h3>
+              <p>
+                Architecting test access, debug visibility, secure DFX, scan dump, RAM dump, array dump,
+                and BIST infrastructure for next-generation AI and high-performance computing platforms.
+              </p>
+            </article>
+
+            <article class="system-card reveal-up">
+              <p class="metadata-line">[POST-SILICON // BRINGUP]</p>
+              <h3>Observability Under Constraint</h3>
+              <p>
+                Turning silicon state into actionable signal through structured debug flows, reproducible
+                evidence, and the shortest path from failing behavior to root cause.
+              </p>
+            </article>
+
+            <article class="system-card reveal-up">
+              <p class="metadata-line">[INTEL // IMPACT]</p>
+              <h3>Yield, Cost, And Coverage</h3>
+              <p>
+                Delivered scan efficiency improvements, defect-rate impact, factory cost reduction, and
+                production debug leverage across DFT/ATE workflows.
+              </p>
+            </article>
+
+            <article class="system-card reveal-up">
+              <p class="metadata-line">[PRODUCT // PLATFORM]</p>
+              <h3>Internal Tools With External Discipline</h3>
+              <p>
+                Requirements, users, adoption, reliability, roadmap pressure, and measurable impact applied
+                to the systems engineers actually depend on.
+              </p>
+            </article>
           </div>
+        </div>
+      </section>
+
+      <section class="section artifacts-section" id="artifacts">
+        <div class="section-grid">
+          <header class="section-header reveal-up">
+            <p class="section-index">03 / IDEAS &amp; ARTIFACTS</p>
+            <h2>Ideas &amp; Artifacts</h2>
+          </header>
+
+          <div class="artifact-grid">
+            <article class="artifact-card reveal-up">
+              <div class="artifact-tags">
+                <p class="metadata-tag">[METADATA: PUBLISHED // SSRN]</p>
+                <p class="metadata-tag">[DOMAIN: AI ECONOMICS]</p>
+              </div>
+              <h3>The Cost of Usable Intelligence: A Unified Framework for Measuring AI's Economic Productivity Frontier</h3>
+              <p>
+                A formal economic framework translating engineering QoS (Quality of Service) constraints into measurable economic impact. This paper introduces the Locational Cost of Intelligence and an intelligence price deflator, providing a structured approach to valuing AI compute output beyond raw FLOPS. It bridges the gap between hardware execution—specifically memory bandwidth and cache utilization—and macro-economic utility.
+              </p>
+              <a class="artifact-link" href="https://papers.ssrn.com/sol3/results.cfm?txtKey_Words=The%20Cost%20of%20Usable%20Intelligence" target="_blank" rel="noopener noreferrer">Link to SSRN Manuscript [External]</a>
+            </article>
+
+            <article class="artifact-card reveal-up">
+              <div class="artifact-tags">
+                <p class="metadata-tag">[METADATA: ARCHITECTURE // ONGOING]</p>
+                <p class="metadata-tag">[DOMAIN: CONTINUAL LEARNING]</p>
+              </div>
+              <h3>Nested Adapters (NeAd)</h3>
+              <p>
+                A continual learning architecture designed to mitigate catastrophic forgetting in large language models. Standard fine-tuning paradigms degrade foundational weights. NeAd introduces a nested topological approach to parameter-efficient fine-tuning, allowing models to acquire novel domain specificities without destroying the base heuristic.
+              </p>
+              <p>The core regularization objective ensures parameter stability across sequential task acquisition:</p>
+              <div class="math-block">
+                $$\mathcal{L}_{NeAd} = \mathcal{L}_{task}(\theta_{base}, \phi_{new}) + \lambda \sum_{i} ||\phi_{new}^{(i)} - \phi_{old}^{(i)}||^2$$
+              </div>
+              <p>Full architecture documentation available upon technical review.</p>
+            </article>
+
+            <article class="artifact-card reveal-up">
+              <div class="artifact-tags">
+                <p class="metadata-tag">[METADATA: MANUSCRIPT // WORLD-BUILDING]</p>
+                <p class="metadata-tag">[DOMAIN: SCALED AI INFRASTRUCTURE]</p>
+              </div>
+              <h3>Speculative Economic Design</h3>
+              <p>
+                A long-form science fiction manuscript serving as a narrative stress-test for AI economic theories. Instead of standard genre tropes, the world-building is rooted in the literal commoditization of intelligence, examining how societies structure themselves around the M-Stack and locational compute constraints. It is an exploration of the long-horizon implications of the hardware infrastructure currently being built.
+              </p>
+            </article>
+
+            <article class="artifact-card reveal-up">
+              <div class="artifact-tags">
+                <p class="metadata-tag">[METADATA: OPTICAL &amp; CARBON // ARCHIVE]</p>
+                <p class="metadata-tag">[DOMAIN: HYPERREALISM]</p>
+              </div>
+              <h3>High-Fidelity Capture</h3>
+              <p>
+                An obsession with signal-to-noise ratios extends to analog mediums. This section archives hyperreal charcoal portrait sketching and medium-format optical captures utilizing Hasselblad, Leica, and Sony A1 systems. A study in micro-contrast, light capture, and manual precision outside the silicon ecosystem.
+              </p>
+              <div class="archive-grid" aria-label="Optical and carbon archive preview">
+                <figure>
+                  <img src="assets/aditya-morey-editorial.jpg" alt="Crushed black-and-white portrait study" loading="lazy" decoding="async" />
+                </figure>
+                <figure>
+                  <img src="assets/og-card.jpg" alt="Crushed black-and-white optical capture study" loading="lazy" decoding="async" />
+                </figure>
+                <figure>
+                  <img src="assets/aditya-morey-editorial.jpg" alt="High-contrast micro-contrast study" loading="lazy" decoding="async" />
+                </figure>
+              </div>
+            </article>
+
+            <article class="artifact-card reveal-up">
+              <div class="artifact-tags">
+                <p class="metadata-tag">[METADATA: DEPLOYED // 2015-2021]</p>
+                <p class="metadata-tag">[DOMAIN: SYSTEMS LEADERSHIP]</p>
+              </div>
+              <h3>Angelica International School</h3>
+              <p>
+                Co-founded and operated an educational initiative providing free access to students in rural India. Approached as an infrastructure problem: navigating extreme resource constraints, defining user requirements, and executing a sustainable operating model. A demonstration of building and scaling complex, mission-critical systems in the physical world.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="trajectory">
+        <div class="section-grid split-grid">
+          <header class="section-header reveal-up">
+            <p class="section-index">04 / TRAJECTORY</p>
+            <h2>Execution History.</h2>
+          </header>
 
           <div class="timeline">
-            <article class="experience-card reveal-up" id="nvidia-experience">
-              <div class="experience-meta">
-                <p>Dec 2024 - Present</p>
-                <h3>NVIDIA Corporation</h3>
-                <span>Senior DFX Methodology Engineer - Santa Clara, CA</span>
-              </div>
-              <div class="experience-body">
-                <p>
-                  Driving DFX methodology for AI and high-performance computing hardware, with a focus on
-                  debug visibility, secure test access, silicon bringup, and product readiness.
-                </p>
-                <ul>
-                  <li>Implement state-of-the-art test access mechanisms, including IEEE 1149.1, IEEE 1500, IEEE 1687, JTAG/IJTAG, IO BIST, memory BIST, scan dump, and array dump solutions.</li>
-                  <li>Architect next-generation DFT methodologies for AI/HPC platforms where diagnosability, traceability, and reliability are product-critical.</li>
-                  <li>Pioneer robust DFX security methodologies to protect resilience and integrity across world-class AI hardware systems.</li>
-                  <li>Mentor junior engineers in advanced test design strategies, optimizing for performance, cost efficiency, and silicon quality.</li>
-                  <li>Spearhead pre-silicon verification for critical AI-enabling features like scan dump and RAM dump on next-generation NVIDIA platforms.</li>
-                  <li>Lead post-silicon bringup and debugging for flagship AI and HPC hardware, accelerating product readiness and reliability.</li>
-                  <li>Collaborate with global teams to optimize scan debug GUI tools across NVIDIA's AI product ecosystem.</li>
-                </ul>
-              </div>
-            </article>
-
-            <article class="experience-card reveal-up" id="intel-experience">
-              <div class="experience-meta">
-                <p>Nov 2021 - Dec 2024</p>
-                <h3>Intel Corporation</h3>
-                <span>Product Development Engineer - Santa Clara, CA</span>
-              </div>
-              <div class="experience-body">
-                <p>
-                  Owned testability, manufacturability, validation, and data-driven product development for
-                  advanced Intel process and server products.
-                </p>
-                <ul>
-                  <li>Spearheaded DFT feature integration for Intel SoCs, improving SCAN testing efficiency by 20% and reducing test costs by 15%.</li>
-                  <li>Led ATE test-plan development for high-performance SoCs, increasing test coverage and reducing defect rates below 250 DPPM.</li>
-                  <li>Conducted ATPG and test coverage analysis using industry-standard tools, increasing coverage by 10% and improving yield.</li>
-                  <li>Developed and optimized JTAG, MBIST, and Scan Compression methodologies, contributing to $1M+ annual cost reduction.</li>
-                  <li>Partnered with Test Engineering on silicon bringup/debug, test pattern optimization, and faster debug workflows.</li>
-                </ul>
-              </div>
-            </article>
-
-            <article class="experience-card reveal-up">
-              <div class="experience-meta">
-                <p>Jul 2021 - Nov 2021</p>
-                <h3>Zeda, Inc.</h3>
-                <span>Research and Development Engineer - Fremont, CA</span>
-              </div>
-              <div class="experience-body">
-                <p>
-                  Built advanced manufacturing and materials workflows for 3D printed medical devices,
-                  connecting research, process optimization, and measurable product quality.
-                </p>
-                <ul>
-                  <li>Pioneered nanotextured coatings for spinal implants, improving surface integration by 50% and biocompatibility by 50%.</li>
-                  <li>Simulated and optimized 3D printing processes with Autodesk Netfabb and DigiMat, reducing prototyping time by 25%.</li>
-                  <li>Characterized Titanium and PEEK nanotextured implants, achieving a 30% increase in quality consistency.</li>
-                  <li>Worked with engineering teams to refine manufacturing processes, delivering a 20% yield increase and 15% performance improvement.</li>
-                </ul>
-              </div>
-            </article>
-
-            <article class="experience-card reveal-up">
-              <div class="experience-meta">
-                <p>Sep 2015 - Jun 2021</p>
-                <h3>Angelica International School</h3>
-                <span>Co-Founder - Amravati, India</span>
-              </div>
-              <div class="experience-body">
-                <p>
-                  Co-founded an education initiative for underprivileged students, combining mission-driven
-                  operations, sustainable business model design, and long-horizon community impact.
-                </p>
-                <ul>
-                  <li>Founded the school in 2015 to provide free education to underprivileged students.</li>
-                  <li>Developed an investor-supported operating model to strengthen financial stability.</li>
-                  <li>Implemented teaching methods designed to improve engagement and create a supportive learning environment.</li>
-                </ul>
-              </div>
-            </article>
-
-            <article class="experience-card reveal-up">
-              <div class="experience-meta">
-                <p>2020 - 2020</p>
-                <h3>Northeastern University</h3>
-                <span>Research Assistant - Boston, MA</span>
-              </div>
-              <div class="experience-body">
-                <p>
-                  Applied product engineering and additive manufacturing rigor to implant design,
-                  manufacturability, quality validation, and cost reduction.
-                </p>
-                <ul>
-                  <li>Designed and optimized a 3D CAD model for a titanium hip implant, reducing production time by 20% and cost by 15% through selective laser melting.</li>
-                  <li>Improved manufacturability by 15% through validation of implant performance against quality standards and specifications.</li>
-                </ul>
-              </div>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <section class="section" id="projects">
-        <div class="container">
-          <div class="section-header">
-            <span>03</span>
-            <h2 class="reveal-up">Writing & Ideas</h2>
-          </div>
-
-          <div class="project-grid">
-            <article class="project-card magnetic reveal-up">
-              <div class="project-topline">
-                <span>Enterprise AI</span>
-                <a href="https://www.linkedin.com/pulse/why-most-enterprise-ai-investments-quietly-failing-aditya-morey-yh0fc" target="_blank" rel="noopener noreferrer" aria-label="Open enterprise AI article">
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M7 17 17 7"></path>
-                    <path d="M8 7h9v9"></path>
-                  </svg>
-                </a>
-              </div>
-              <h3>The Cost of Usable Intelligence</h3>
-              <p>
-                A framework for translating engineering QoS constraints into economic measurement, including
-                Locational Cost of Intelligence and an intelligence price deflator.
-              </p>
-              <div class="project-tags">
-                <span>AI Strategy</span>
-                <span>Enterprise</span>
-                <span>Execution</span>
-              </div>
-            </article>
-
-            <article class="project-card magnetic reveal-up">
-              <div class="project-topline">
-                <span>Agentic AI</span>
-                <a href="https://www.linkedin.com/pulse/reinventing-visual-data-processing-inside-nvidias-cosmos-aditya-morey-q8idc" target="_blank" rel="noopener noreferrer" aria-label="Open NVIDIA COSMOS article">
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M7 17 17 7"></path>
-                    <path d="M8 7h9v9"></path>
-                  </svg>
-                </a>
-              </div>
-              <h3>Simulation-First Physical AI</h3>
-              <p>
-                Writing on digital twins, simulation-first infrastructure, 3D impact lenses, and the maturity
-                models needed to bring physical AI into real-world workflows.
-              </p>
-              <div class="project-tags">
-                <span>Agents</span>
-                <span>Automation</span>
-                <span>Workflows</span>
-              </div>
-            </article>
-
-            <article class="project-card magnetic reveal-up">
-              <div class="project-topline">
-                <span>Infrastructure</span>
-                <a href="https://www.linkedin.com/pulse/nvidia-hits-4-trillion-case-study-strategic-resilience-aditya-morey-evayc" target="_blank" rel="noopener noreferrer" aria-label="Open NVIDIA strategy article">
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M7 17 17 7"></path>
-                    <path d="M8 7h9v9"></path>
-                  </svg>
-                </a>
-              </div>
-              <h3>AI Platforms, Robotics, and NVIDIA Strategy</h3>
-              <p>
-                Public analysis spanning NVIDIA strategy, COSMOS at CES 2025, humanoid robotics control,
-                MCP, quantum computing, and the infrastructure economics of AI.
-              </p>
-              <div class="project-tags">
+            <article class="timeline-row reveal-up">
+              <div class="timeline-meta">
+                <p>DEC 2024 - PRESENT</p>
                 <span>NVIDIA</span>
-                <span>MCP</span>
-                <span>Physical AI</span>
+              </div>
+              <div>
+                <h3>Senior DFX Methodology Engineer</h3>
+                <p>
+                  DFX methodology, secure test access, silicon debug, pre-silicon verification, post-silicon
+                  bringup, and cross-functional debug infrastructure for AI/HPC platforms.
+                </p>
               </div>
             </article>
-          </div>
-        </div>
-      </section>
 
-      <section class="section split-section" id="education">
-        <div class="container split-layout">
-          <div>
-            <div class="section-header">
-              <span>04</span>
-              <h2 class="reveal-up">Education</h2>
-            </div>
-          </div>
+            <article class="timeline-row reveal-up">
+              <div class="timeline-meta">
+                <p>2018 - 2024</p>
+                <span>INTEL</span>
+              </div>
+              <div>
+                <h3>DFT / ATE / Product Debug</h3>
+                <p>
+                  Production test, scan debug, yield improvement, coverage analysis, defect-rate reduction,
+                  data-driven factory debug, and high-leverage automation across silicon products.
+                </p>
+              </div>
+            </article>
 
-          <div class="stack-list">
-            <article class="stack-item reveal-up">
-              <p>Master of Science</p>
-              <h3>Northeastern University</h3>
-              <span>Mechanical Engineering, concentration in Materials Science - Boston, MA - May 2021</span>
-            </article>
-            <article class="stack-item reveal-up">
-              <p>Bachelor of Technology</p>
-              <h3>Indian Institute of Technology, Kanpur</h3>
-              <span>Materials Science and Engineering - Kanpur, India - Nov 2017</span>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <section class="section" id="wins">
-        <div class="container">
-          <div class="section-header">
-            <span>05</span>
-            <h2 class="reveal-up">Achievements</h2>
-          </div>
-
-          <div class="wins-grid">
-            <article class="win-card reveal-up">
-              <strong>01</strong>
-              <h3>AI Hardware DFX Leader</h3>
-              <p>Builds DFX methodology for NVIDIA AI/HPC platforms across IEEE access, BIST, scan dump, RAM dump, DFD, secure debug, and post-silicon bringup.</p>
-            </article>
-            <article class="win-card reveal-up">
-              <strong>02</strong>
-              <h3>Manufacturing Impact</h3>
-              <p>Drove Intel SoC test improvements: 20% SCAN efficiency, 15% test-cost reduction, 10% coverage gains, and sub-250 DPPM defect rates.</p>
-            </article>
-            <article class="win-card reveal-up">
-              <strong>03</strong>
-              <h3>Product-Minded Platform Builder</h3>
-              <p>Frames internal silicon tools as products: users, requirements, roadmap, adoption, outcomes, and reliable workflows at scale.</p>
-            </article>
-            <article class="win-card reveal-up">
-              <strong>04</strong>
-              <h3>Patent and Public Technical Voice</h3>
-              <p>Inventor on 1 issued patent, author of AI infrastructure essays, and builder of a 5K+ professional network.</p>
+            <article class="timeline-row reveal-up">
+              <div class="timeline-meta">
+                <p>2015 - 2021</p>
+                <span>ANGELICA</span>
+              </div>
+              <div>
+                <h3>Co-Founder, Systems Operator</h3>
+                <p>
+                  Built and operated an educational initiative for rural India through constraints that looked
+                  less like business school and more like field engineering.
+                </p>
+              </div>
             </article>
           </div>
         </div>
       </section>
 
       <section class="section contact" id="contact">
-        <div class="container contact-layout">
-          <div class="contact-copy">
-            <div class="section-header">
-              <span>06</span>
-              <h2 class="reveal-up">Contact</h2>
-            </div>
-            <p class="lead reveal-up">
-              I am interested in ambitious conversations around AI hardware, DFX/DFT, silicon observability,
-              product-grade engineering platforms, and the infrastructure required for agentic AI to meet the real world.
-            </p>
-            <div class="contact-links reveal-up">
-              <a class="contact-link magnetic" href="mailto:adityamorey1723@gmail.com">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M4 4h16v16H4z"></path>
-                  <path d="m4 7 8 6 8-6"></path>
-                </svg>
-                <span>adityamorey1723@gmail.com</span>
-              </a>
-              <a class="contact-link magnetic" href="https://www.linkedin.com/in/adityamorey/" target="_blank" rel="noopener noreferrer">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"></path>
-                  <path d="M2 9h4v12H2z"></path>
-                  <path d="M4 4h.01"></path>
-                </svg>
-                <span>linkedin.com/in/adityamorey</span>
-              </a>
-              <a class="contact-link magnetic" href="https://www.linkedin.com/in/adityamorey/recent-activity/articles/" target="_blank" rel="noopener noreferrer">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-                  <path d="M4 4v15.5"></path>
-                  <path d="M8 4h12v13H8z"></path>
-                </svg>
-                <span>Read Aditya's articles</span>
-              </a>
-              <a class="contact-link magnetic" href="https://www.linkedin.com/in/adityamorey/" target="_blank" rel="noopener noreferrer">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M21 10c0 7-9 12-9 12S3 17 3 10a9 9 0 0 1 18 0z"></path>
-                  <path d="M12 10h.01"></path>
-                </svg>
-                <span>San Francisco Bay Area</span>
-              </a>
-            </div>
-          </div>
+        <div class="section-grid contact-grid">
+          <header class="section-header reveal-up">
+            <p class="section-index">05 / CONTACT</p>
+            <h2>Discuss AI Hardware, DFX, Or Intelligence Infrastructure.</h2>
+          </header>
 
-          <div class="contact-form reveal-up" aria-label="Contact panel">
-            <p class="eyebrow">Best Channel</p>
-            <h3>For AI hardware, DFX, silicon, and product-platform conversations.</h3>
-            <p>
-              Reach out for senior AI hardware, DFT/ATE, silicon debug, post-silicon validation, and product-platform opportunities.
-            </p>
-            <a class="btn btn-primary magnetic" href="mailto:adityamorey1723@gmail.com">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M4 4h16v16H4z"></path>
-                <path d="m4 7 8 6 8-6"></path>
-              </svg>
-              <span>Email Aditya</span>
-            </a>
+          <div class="contact-panel reveal-up">
+            <a href="mailto:adityamorey1723@gmail.com">adityamorey1723@gmail.com</a>
+            <a href="https://www.linkedin.com/in/adityamorey/" target="_blank" rel="noopener noreferrer">linkedin.com/in/adityamorey</a>
+            <a href="https://www.linkedin.com/in/adityamorey/recent-activity/articles/" target="_blank" rel="noopener noreferrer">recent-activity/articles</a>
+            <button type="button" id="resume-open">REQUEST_RESUME</button>
           </div>
         </div>
       </section>
     </main>
 
     <footer class="site-footer">
-      <div class="container footer-inner">
-        <p>Designed and built for Aditya Morey.</p>
-        <a href="#hero">Back to top</a>
+      <div class="section-grid footer-grid">
+        <p>ADITYA MOREY // AI HARDWARE DFX</p>
+        <p>BUILT FOR SILICON-GRADE PRECISION</p>
       </div>
     </footer>
 
     <dialog class="resume-modal" id="resume-modal">
       <form method="dialog">
         <button class="modal-close" value="close" aria-label="Close resume dialog">x</button>
-        <p class="eyebrow">Resume</p>
+        <p class="metadata-line">[RESUME // CONTROLLED ACCESS]</p>
         <h2>Resume available on request.</h2>
         <p>
-          The public portfolio highlights the strongest profile-backed impact: NVIDIA DFX methodology, Intel SoC product development,
-          20% SCAN efficiency gains, sub-250 DPPM quality impact, product-platform thinking, and 1 issued patent.
+          The fastest path is email:
+          <a href="mailto:adityamorey1723@gmail.com?subject=Resume%20request">adityamorey1723@gmail.com</a>
         </p>
-        <a class="btn btn-primary magnetic" href="mailto:adityamorey1723@gmail.com?subject=Resume%20request">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M4 4h16v16H4z"></path>
-                <path d="m4 7 8 6 8-6"></path>
-              </svg>
-          <span>Request Resume</span>
-        </a>
       </form>
     </dialog>
 
