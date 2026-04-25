@@ -1937,17 +1937,20 @@ let scanRegister = [1, 0, 1, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 0];
 let scanHistory = [];
 
 const syncScanCanvas = () => {
-  if (!scanCanvas) return { width: 0, height: 0 };
+  if (!scanCanvas) return { width: 0, height: 0, scale: 1 };
   const rect = scanCanvas.getBoundingClientRect();
+  const scale = Math.min(window.devicePixelRatio || 1, 2.5);
   const width = Math.max(420, Math.floor(rect.width || 720));
   const height = Math.max(360, Math.floor(rect.height || 420));
+  const pixelWidth = Math.floor(width * scale);
+  const pixelHeight = Math.floor(height * scale);
 
-  if (scanCanvas.width !== width || scanCanvas.height !== height) {
-    scanCanvas.width = width;
-    scanCanvas.height = height;
+  if (scanCanvas.width !== pixelWidth || scanCanvas.height !== pixelHeight) {
+    scanCanvas.width = pixelWidth;
+    scanCanvas.height = pixelHeight;
   }
 
-  return { width, height };
+  return { width, height, scale };
 };
 
 const setScanTelemetry = () => {
@@ -2010,7 +2013,8 @@ function renderScan() {
   if (!scanCanvas) return;
   const ctx = scanCanvas.getContext("2d");
   if (!ctx) return;
-  const { width, height } = syncScanCanvas();
+  const { width, height, scale } = syncScanCanvas();
+  ctx.setTransform(scale, 0, 0, scale, 0, 0);
   const leftGutter = 92;
   const rightGutter = 36;
   const topGutter = 44;
