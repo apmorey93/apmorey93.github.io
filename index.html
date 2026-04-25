@@ -286,21 +286,23 @@
                 <canvas id="lci-canvas" width="640" height="384" aria-label="LCI cost-efficiency curve graph"></canvas>
                 <div class="telemetry-grid lci-telemetry">
                   <div class="lci-control">
-                    <label for="lci-latency">NETWORK LATENCY PENALTY</label>
-                    <input type="range" id="lci-latency" min="1" max="100" value="50" />
-                    <span id="lci-latency-val">50</span>
+                    <label for="lci-latency">NETWORK RTT INPUT</label>
+                    <input type="range" id="lci-latency" min="20" max="260" value="120" />
+                    <span id="lci-latency-val">120 ms</span>
                   </div>
                   <div class="lci-control">
-                    <label for="lci-reliability">INFRASTRUCTURE RELIABILITY</label>
+                    <label for="lci-reliability">AVAILABILITY TARGET</label>
                     <input type="range" id="lci-reliability" min="90" max="99.99" step="0.01" value="99.0" />
                     <span id="lci-reliability-val">99.00%</span>
                   </div>
                   <div>M-STACK COST: <span id="lci-mstack-val">--</span></div>
                   <div>STANDARD COST: <span id="lci-std-val">--</span></div>
+                  <div>M-STACK PHI: <span id="lci-mstack-phi">--</span></div>
+                  <div>STANDARD PHI: <span id="lci-std-phi">--</span></div>
                 </div>
               </div>
               <div class="compute-status">
-                <span>FORMULA: <strong>Cost = f(Compute, 1 / Latency) x Reliability</strong></span>
+                <span>FORMULA: <strong>LCI = C_task / Phi(a, latency, availability, safety)</strong></span>
               </div>
             </div>
           </div>

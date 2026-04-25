@@ -575,7 +575,9 @@ const lciControls = {
   latencyValue: $("#lci-latency-val"),
   reliabilityValue: $("#lci-reliability-val"),
   mstack: $("#lci-mstack-val"),
-  standard: $("#lci-std-val")
+  standard: $("#lci-std-val"),
+  mstackPhi: $("#lci-mstack-phi"),
+  standardPhi: $("#lci-std-phi")
 };
 const lifeControls = {
   state: $("#life-state"),
@@ -1102,10 +1104,12 @@ function drawLCI() {
   if (!ctx) return;
 
   const { width, height } = syncLciCanvas();
-  const latency = Number(lciControls.latency ? lciControls.latency.value : 50);
-  const reliabilityPct = Number(lciControls.reliability ? lciControls.reliability.value : 99);
-  const reliability = reliabilityPct / 100;
-  const reliabilityPressure = 1 + Math.pow((reliability - 0.9) / 0.0999, 2) * 0.42;
+  const networkRtt = Number(lciControls.latency ? lciControls.latency.value : 120);
+  const availabilityTargetPct = Number(lciControls.reliability ? lciControls.reliability.value : 99);
+  const availabilityTarget = availabilityTargetPct / 100;
+  const latencyTarget = 200;
+  const beta = 20;
+  const weights = { accuracy: 0.5, latency: 0.2, availability: 0.2, safety: 0.1 };
   const plot = {
     left: 52,
     right: width - 24,
@@ -1115,12 +1119,53 @@ function drawLCI() {
   const plotWidth = plot.right - plot.left;
   const plotHeight = plot.bottom - plot.top;
 
-  const standardCost = (distance) =>
-    24 + Math.pow(distance, 2.25) * latency * 1.32 * reliabilityPressure + distance * 18;
-  const mstackCost = (distance) =>
-    36 + distance * latency * 0.23 * reliabilityPressure + Math.pow(distance, 1.35) * 9;
-  const maxCost = Math.max(standardCost(1), mstackCost(1), 130) * 1.12;
-  const toX = (distance) => plot.left + distance * plotWidth;
+  const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+  const smoothHinge = (value, threshold) => beta * Math.log(1 + Math.exp((value - threshold) / beta));
+  const latencyScore = (latencyMs) => {
+    const adjusted = latencyTarget / (latencyTarget + smoothHinge(latencyMs, latencyTarget));
+    return clamp(adjusted, 0.05, 1);
+  };
+  const thresholdScore = (observed, target) => clamp(observed / target, 0.05, 1);
+  const qosPhi = ({ accuracy, latencyMs, availability, safety }) => {
+    const accuracyScore = thresholdScore(accuracy, 0.85);
+    const availabilityScore = thresholdScore(availability, availabilityTarget);
+    const safetyScore = thresholdScore(safety, 0.95);
+    return (
+      Math.pow(accuracyScore, weights.accuracy) *
+      Math.pow(latencyScore(latencyMs), weights.latency) *
+      Math.pow(availabilityScore, weights.availability) *
+      Math.pow(safetyScore, weights.safety)
+    );
+  };
+  const modelAt = (utilization, mode) => {
+    const standard = mode === "standard";
+    const umax = standard ? 0.92 : 0.96;
+    const headroom = Math.max(0.025, umax - utilization);
+    const queueTail = (standard ? 36 : 20) * Math.pow(utilization / headroom, standard ? 1.72 : 1.34);
+    const networkMs = standard ? networkRtt : Math.max(8, networkRtt * 0.16);
+    const baseLatency = standard ? 54 : 38;
+    const latencyMs = baseLatency + networkMs + queueTail;
+    const directCost =
+      (standard ? 0.052 : 0.064) / Math.max(0.18, utilization) +
+      (standard ? 0.016 : 0.012) +
+      networkMs * (standard ? 0.00022 : 0.00004);
+    const availability = clamp((standard ? 0.997 : 0.9993) - Math.pow(utilization, 4) * (standard ? 0.012 : 0.004), 0.88, 0.9999);
+    const phi = qosPhi({
+      accuracy: standard ? 0.872 : 0.876,
+      latencyMs,
+      availability,
+      safety: standard ? 0.962 : 0.965
+    });
+
+    return { latencyMs, directCost, phi, lci: directCost / phi };
+  };
+  const utilizationAt = (index) => 0.2 + (index / 180) * 0.76;
+  const maxCost = Math.max(
+    ...Array.from({ length: 181 }, (_, index) =>
+      Math.max(modelAt(utilizationAt(index), "standard").lci, modelAt(utilizationAt(index), "mstack").lci)
+    )
+  ) * 1.16;
+  const toX = (utilization) => plot.left + ((utilization - 0.2) / 0.76) * plotWidth;
   const toY = (cost) => plot.bottom - (cost / maxCost) * plotHeight;
 
   ctx.fillStyle = "#020202";
@@ -1149,15 +1194,15 @@ function drawLCI() {
   ctx.lineTo(plot.right, plot.bottom);
   ctx.stroke();
 
-  const drawCurve = (costFn, color) => {
+  const drawCurve = (mode, color) => {
     ctx.strokeStyle = color;
     ctx.lineWidth = 2;
     ctx.beginPath();
 
-    for (let index = 0; index <= 160; index += 1) {
-      const distance = index / 160;
-      const x = toX(distance);
-      const y = toY(costFn(distance));
+    for (let index = 0; index <= 180; index += 1) {
+      const utilization = utilizationAt(index);
+      const x = toX(utilization);
+      const y = toY(modelAt(utilization, mode).lci);
       if (index === 0) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
     }
@@ -1165,25 +1210,27 @@ function drawLCI() {
     ctx.stroke();
   };
 
-  drawCurve(standardCost, "#f59e0b");
-  drawCurve(mstackCost, "#7dd3fc");
+  drawCurve("standard", "#f59e0b");
+  drawCurve("mstack", "#7dd3fc");
 
   ctx.font = "12px JetBrains Mono, SFMono-Regular, Consolas, monospace";
   ctx.fillStyle = "rgba(229, 231, 235, 0.78)";
-  ctx.fillText("EDGE", plot.left, height - 14);
-  ctx.fillText("CLOUD", plot.right - 46, height - 14);
-  ctx.fillText("COST", 10, plot.top + 8);
+  ctx.fillText("u=0.20", plot.left, height - 14);
+  ctx.fillText("u=0.96", plot.right - 48, height - 14);
+  ctx.fillText("LCI", 10, plot.top + 8);
   ctx.fillStyle = "#7dd3fc";
-  ctx.fillText("M-STACK", plot.left + 16, toY(mstackCost(0.42)) - 10);
+  ctx.fillText("M-STACK", plot.left + plotWidth * 0.18, toY(modelAt(0.48, "mstack").lci) - 10);
   ctx.fillStyle = "#f59e0b";
-  ctx.fillText("STANDARD", plot.left + plotWidth * 0.58, toY(standardCost(0.58)) - 12);
+  ctx.fillText("STANDARD", plot.left + plotWidth * 0.58, toY(modelAt(0.62, "standard").lci) - 12);
 
-  const mstackFinal = mstackCost(1);
-  const standardFinal = standardCost(1);
-  if (lciControls.latencyValue) lciControls.latencyValue.textContent = latency.toFixed(0);
-  if (lciControls.reliabilityValue) lciControls.reliabilityValue.textContent = `${reliabilityPct.toFixed(2)}%`;
-  if (lciControls.mstack) lciControls.mstack.textContent = mstackFinal.toFixed(1);
-  if (lciControls.standard) lciControls.standard.textContent = standardFinal.toFixed(1);
+  const mstackFinal = modelAt(0.72, "mstack");
+  const standardFinal = modelAt(0.72, "standard");
+  if (lciControls.latencyValue) lciControls.latencyValue.textContent = `${networkRtt.toFixed(0)} ms`;
+  if (lciControls.reliabilityValue) lciControls.reliabilityValue.textContent = `${availabilityTargetPct.toFixed(2)}%`;
+  if (lciControls.mstack) lciControls.mstack.textContent = `$${mstackFinal.lci.toFixed(3)}`;
+  if (lciControls.standard) lciControls.standard.textContent = `$${standardFinal.lci.toFixed(3)}`;
+  if (lciControls.mstackPhi) lciControls.mstackPhi.textContent = mstackFinal.phi.toFixed(3);
+  if (lciControls.standardPhi) lciControls.standardPhi.textContent = standardFinal.phi.toFixed(3);
 }
 
 if (lciControls.latency && lciControls.reliability) {
