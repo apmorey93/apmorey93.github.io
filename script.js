@@ -6,6 +6,7 @@ const mobileMenu = $("#mobile-menu");
 const progress = $(".scroll-progress");
 const resumeOpen = $("#resume-open");
 const resumeModal = $("#resume-modal");
+const root = document.documentElement;
 
 const reducedMotion =
   typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -34,10 +35,66 @@ const updateProgress = () => {
   const height = document.documentElement.scrollHeight - window.innerHeight;
   const pct = height > 0 ? (window.scrollY / height) * 100 : 0;
   progress.style.width = `${pct}%`;
+  root.style.setProperty("--grid-y", `${(window.scrollY * 0.12).toFixed(2)}px`);
+  root.style.setProperty("--grid-x", `${(window.scrollY * -0.045).toFixed(2)}px`);
 };
 
 window.addEventListener("scroll", updateProgress, { passive: true });
 updateProgress();
+
+const parallaxTargets = $$("[data-parallax]");
+const interactivePanels = $$(".system-card, .artifact-card, .timeline-row, .contact-panel");
+let parallaxFrame = 0;
+
+const updateParallax = () => {
+  parallaxFrame = 0;
+  if (reducedMotion) return;
+
+  parallaxTargets.forEach((target) => {
+    const depth = Number(target.dataset.parallax || 0);
+    const rect = target.getBoundingClientRect();
+    const centerDelta = window.innerHeight * 0.5 - (rect.top + rect.height * 0.5);
+    const y = Math.max(-28, Math.min(28, centerDelta * depth));
+    target.style.setProperty("--parallax-y", `${y.toFixed(2)}px`);
+  });
+};
+
+const requestParallax = () => {
+  if (parallaxFrame) return;
+  parallaxFrame = requestAnimationFrame(updateParallax);
+};
+
+if (!reducedMotion && parallaxTargets.length) {
+  window.addEventListener("scroll", requestParallax, { passive: true });
+  window.addEventListener("resize", requestParallax);
+  requestParallax();
+}
+
+if (!reducedMotion) {
+  window.addEventListener(
+    "pointermove",
+    (event) => {
+      root.style.setProperty("--pointer-x", `${event.clientX}px`);
+      root.style.setProperty("--pointer-y", `${event.clientY}px`);
+    },
+    { passive: true }
+  );
+
+  interactivePanels.forEach((panel) => {
+    panel.addEventListener("pointermove", (event) => {
+      const rect = panel.getBoundingClientRect();
+      const x = (event.clientX - rect.left) / rect.width - 0.5;
+      const y = (event.clientY - rect.top) / rect.height - 0.5;
+      panel.style.transform = `translate3d(${(x * 5).toFixed(2)}px, ${(y * 5).toFixed(2)}px, 0)`;
+      panel.style.setProperty("--cell-activity", "0.065");
+    });
+
+    panel.addEventListener("pointerleave", () => {
+      panel.style.transform = "";
+      panel.style.removeProperty("--cell-activity");
+    });
+  });
+}
 
 if ("IntersectionObserver" in window && !reducedMotion) {
   document.documentElement.classList.add("motion-ready");
