@@ -1910,22 +1910,22 @@ const TAP_TRANSITIONS = {
 };
 
 const TAP_NODE_POSITIONS = {
-  TEST_LOGIC_RESET: [0.12, 0.18],
-  RUN_TEST_IDLE: [0.32, 0.18],
-  SELECT_DR_SCAN: [0.52, 0.18],
-  SELECT_IR_SCAN: [0.74, 0.18],
-  CAPTURE_DR: [0.18, 0.38],
-  SHIFT_DR: [0.36, 0.38],
-  EXIT1_DR: [0.54, 0.38],
-  PAUSE_DR: [0.74, 0.38],
-  EXIT2_DR: [0.18, 0.58],
-  UPDATE_DR: [0.36, 0.58],
-  CAPTURE_IR: [0.54, 0.58],
-  SHIFT_IR: [0.74, 0.58],
-  EXIT1_IR: [0.18, 0.78],
-  PAUSE_IR: [0.36, 0.78],
-  EXIT2_IR: [0.54, 0.78],
-  UPDATE_IR: [0.74, 0.78]
+  TEST_LOGIC_RESET: [0.12, 0.16],
+  RUN_TEST_IDLE: [0.34, 0.16],
+  SELECT_DR_SCAN: [0.56, 0.16],
+  SELECT_IR_SCAN: [0.78, 0.16],
+  CAPTURE_DR: [0.16, 0.34],
+  SHIFT_DR: [0.36, 0.34],
+  EXIT1_DR: [0.56, 0.34],
+  PAUSE_DR: [0.78, 0.34],
+  EXIT2_DR: [0.16, 0.52],
+  UPDATE_DR: [0.36, 0.52],
+  CAPTURE_IR: [0.56, 0.52],
+  SHIFT_IR: [0.78, 0.52],
+  EXIT1_IR: [0.16, 0.7],
+  PAUSE_IR: [0.36, 0.7],
+  EXIT2_IR: [0.56, 0.7],
+  UPDATE_IR: [0.78, 0.7]
 };
 
 let scanState = "TEST_LOGIC_RESET";
@@ -2011,8 +2011,12 @@ function renderScan() {
   const ctx = scanCanvas.getContext("2d");
   if (!ctx) return;
   const { width, height } = syncScanCanvas();
-  const stateHeight = height * 0.54;
-  const nodeWidth = Math.max(86, width * 0.12);
+  const leftGutter = 92;
+  const rightGutter = 36;
+  const topGutter = 44;
+  const stateHeight = Math.max(230, Math.min(height * 0.5, height - 198));
+  const stateWidth = Math.max(280, width - leftGutter - rightGutter);
+  const nodeWidth = Math.min(128, Math.max(94, stateWidth * 0.14));
   const nodeHeight = 34;
 
   ctx.fillStyle = "#020202";
@@ -2036,8 +2040,8 @@ function renderScan() {
   const nodeCenters = {};
   Object.entries(TAP_NODE_POSITIONS).forEach(([state, [nx, ny]]) => {
     nodeCenters[state] = {
-      x: nx * width,
-      y: ny * stateHeight
+      x: leftGutter + nx * stateWidth,
+      y: topGutter + ny * stateHeight
     };
   });
 
@@ -2059,9 +2063,12 @@ function renderScan() {
     ctx.setLineDash([]);
 
     ctx.fillStyle = route.color;
-    ctx.font = "10px JetBrains Mono, SFMono-Regular, Consolas, monospace";
+    ctx.font = "9px JetBrains Mono, SFMono-Regular, Consolas, monospace";
     ctx.textAlign = "center";
-    ctx.fillText(route.label, (start.x + end.x) * 0.5, (start.y + end.y) * 0.5 - 6);
+    ctx.textBaseline = "middle";
+    const labelX = start.x + (index === 0 ? nodeWidth * 0.78 : nodeWidth * 0.34);
+    const labelY = start.y + (index === 0 ? -nodeHeight * 0.62 : -nodeHeight * 0.9);
+    ctx.fillText(route.label, labelX, labelY);
   });
 
   Object.entries(nodeCenters).forEach(([state, center]) => {
@@ -2081,13 +2088,16 @@ function renderScan() {
     ctx.fillText(state.replace("TEST_LOGIC_", "TEST_").replace("_SCAN", ""), center.x, center.y);
   });
 
-  const registerY = stateHeight + 14;
-  const registerX = 64;
-  const cellWidth = Math.min(30, (width - registerX - 24) / scanRegister.length);
+  const registerY = topGutter + stateHeight + 34;
+  const registerLabelX = 18;
+  const registerX = 152;
+  const registerWidth = Math.max(180, width - registerX - 50);
+  const cellWidth = Math.min(34, registerWidth / scanRegister.length);
   ctx.fillStyle = "#9a9a9a";
   ctx.font = "10px JetBrains Mono, SFMono-Regular, Consolas, monospace";
   ctx.textAlign = "left";
-  ctx.fillText("SCAN_CHAIN[15:0]", 18, registerY + 18);
+  ctx.textBaseline = "middle";
+  ctx.fillText("SCAN_CHAIN[15:0]", registerLabelX, registerY + 13);
 
   scanRegister.forEach((bit, index) => {
     const x = registerX + index * cellWidth;
@@ -2105,9 +2115,9 @@ function renderScan() {
   const tmsValues = samples.map((sample) => sample.tms);
   const tdiValues = samples.map((sample) => sample.tdi);
   const tdoValues = samples.map((sample) => sample.tdo);
-  const waveX = 70;
-  const waveWidth = width - waveX - 24;
-  const waveStart = registerY + 58;
+  const waveX = 104;
+  const waveWidth = width - waveX - 50;
+  const waveStart = registerY + 70;
   drawDigitalWave(ctx, "TCK", tckValues, waveX, waveStart, waveWidth, "#e0e0e0");
   drawDigitalWave(ctx, "TMS", tmsValues, waveX, waveStart + 34, waveWidth, "#ffaa00");
   drawDigitalWave(ctx, "TDI", tdiValues, waveX, waveStart + 68, waveWidth, "#76b900");
