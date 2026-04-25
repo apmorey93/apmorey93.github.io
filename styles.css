@@ -339,17 +339,19 @@ svg {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: contrast(1.08) saturate(0.82) brightness(0.86);
+  filter: grayscale(1) contrast(1.18) saturate(0.2) brightness(0.8);
   transform: scale(1.02);
   transition: filter 260ms ease, transform 420ms var(--ease);
 }
 
-.portrait-block:hover {
+.portrait-block:hover,
+.portrait-block:focus-visible {
   border-color: rgba(125, 211, 252, 0.38);
 }
 
-.portrait-block:hover img {
-  filter: contrast(1.12) saturate(0.96) brightness(0.92);
+.portrait-block:hover img,
+.portrait-block:focus-visible img {
+  filter: grayscale(0) contrast(1.08) saturate(0.95) brightness(0.92);
   transform: scale(1.045);
 }
 
@@ -760,13 +762,14 @@ svg {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: contrast(1.08) saturate(0.7) brightness(0.78);
+  filter: grayscale(1) contrast(1.25) saturate(0.18) brightness(0.72);
   transform: scale(1.01);
   transition: filter 240ms ease, transform 420ms var(--ease);
 }
 
-.archive-grid figure:hover img {
-  filter: contrast(1.12) saturate(0.92) brightness(0.88);
+.archive-grid figure:hover img,
+.archive-grid figure:focus-visible img {
+  filter: grayscale(0) contrast(1.08) saturate(0.94) brightness(0.88);
   transform: scale(1.055);
 }
 
@@ -779,7 +782,8 @@ svg {
   transform: scale(1.18);
 }
 
-.archive-grid figure:nth-child(3):hover img {
+.archive-grid figure:nth-child(3):hover img,
+.archive-grid figure:nth-child(3):focus-visible img {
   transform: scale(1.22);
 }
 
