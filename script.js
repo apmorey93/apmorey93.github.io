@@ -8,6 +8,11 @@ const resumeOpen = $("#resume-open");
 const resumeModal = $("#resume-modal");
 const infraOpen = $("#infra-open");
 const infraModal = $("#infra-modal");
+const cliOverlay = $("#cli-overlay");
+const cliOutput = $("#cli-output");
+const cliForm = $("#cli-form");
+const cliInput = $("#cli-input");
+const cliClose = $("#cli-close");
 const root = document.documentElement;
 
 const reducedMotion =
@@ -164,6 +169,153 @@ if (infraOpen && infraModal) {
     }
 
     infraModal.setAttribute("open", "");
+  });
+}
+
+const cliLines = [
+  { text: "boot: local shell attached. type `help`.", tone: "ok" },
+  { text: "hint: `scan` jumps to the TAP visualizer." }
+];
+
+const renderCli = () => {
+  if (!cliOutput) return;
+  cliOutput.replaceChildren();
+
+  cliLines.slice(-44).forEach((line) => {
+    const row = document.createElement("p");
+    row.className = `cli-line ${line.tone || ""}`.trim();
+    row.textContent = line.text;
+    cliOutput.appendChild(row);
+  });
+
+  cliOutput.scrollTop = cliOutput.scrollHeight;
+};
+
+const writeCli = (text, tone = "") => {
+  String(text)
+    .split("\n")
+    .forEach((line) => cliLines.push({ text: line, tone }));
+  renderCli();
+};
+
+const openCli = () => {
+  if (!cliOverlay || !cliInput) return;
+  cliOverlay.hidden = false;
+  renderCli();
+  requestAnimationFrame(() => cliInput.focus());
+};
+
+const closeCli = () => {
+  if (!cliOverlay) return;
+  cliOverlay.hidden = true;
+};
+
+const jumpToCompute = (tabName) => {
+  closeCli();
+  document.getElementById("compute")?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth" });
+  setActiveComputeTab(tabName);
+};
+
+const runCliCommand = (rawCommand) => {
+  const command = rawCommand.trim();
+  if (!command) return;
+
+  writeCli(`am@portfolio:~$ ${command}`, "command");
+
+  switch (command.toLowerCase()) {
+    case "help":
+      writeCli("commands: ls, whoami, cat resume.txt, cat patent.txt, scan, matrix, lci, floorplan, life, patent, ping adityamorey.com, ssh adi@nvidia, sudo, clear, exit");
+      break;
+    case "ls":
+      writeCli("compute/  artifacts/  trajectory/  contact/  resume.txt  patent.txt");
+      break;
+    case "whoami":
+      writeCli("aditya_morey // senior_ai_hardware_dfx_engineer // static_site_userland", "ok");
+      break;
+    case "cat resume.txt":
+      writeCli("resume: controlled access. email adityamorey1723@gmail.com with context and I will send it.");
+      break;
+    case "cat patent.txt":
+      writeCli("US 12,172,378 B1 // issued Dec 24, 2024 // nanotextured 3D printed implant surfaces modified with lipases.", "ok");
+      break;
+    case "scan":
+      writeCli("routing to TAP visualizer...", "ok");
+      jumpToCompute("scan");
+      break;
+    case "matrix":
+      writeCli("routing to WebGPU matrix kernel...", "ok");
+      jumpToCompute("matrix");
+      break;
+    case "lci":
+      writeCli("routing to LCI model...", "ok");
+      jumpToCompute("lci");
+      break;
+    case "floorplan":
+      writeCli("routing to floorplan constraint solver...", "ok");
+      jumpToCompute("floorplan");
+      break;
+    case "life":
+      writeCli("routing to cellular automata memory...", "ok");
+      jumpToCompute("life");
+      break;
+    case "patent":
+      writeCli("opening official USPTO patent PDF...", "ok");
+      window.open("https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12172378", "_blank", "noopener,noreferrer");
+      break;
+    case "ping adityamorey.com":
+      writeCli("64 bytes from edge: ttl=static time=local\npackets transmitted: 4, received: 4, loss: 0%");
+      break;
+    case "ssh adi@nvidia":
+      writeCli("permission denied (publickey). correct outcome.", "warn");
+      break;
+    case "sudo":
+    case "sudo su":
+      writeCli("sudo: this is a static page. privilege boundary remains physical.", "warn");
+      break;
+    case "clear":
+      cliLines.length = 0;
+      renderCli();
+      break;
+    case "exit":
+      closeCli();
+      break;
+    default:
+      writeCli(`${command}: command not found. type \`help\`.`, "warn");
+      break;
+  }
+};
+
+if (cliOverlay && cliForm && cliInput) {
+  cliForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    runCliCommand(cliInput.value);
+    cliInput.value = "";
+  });
+
+  cliClose?.addEventListener("click", closeCli);
+  cliOverlay.addEventListener("click", (event) => {
+    if (event.target === cliOverlay) closeCli();
+  });
+
+  window.addEventListener("keydown", (event) => {
+    const target = event.target;
+    const isTyping =
+      target instanceof HTMLInputElement ||
+      target instanceof HTMLTextAreaElement ||
+      target instanceof HTMLSelectElement ||
+      target?.isContentEditable;
+
+    if (event.key === "Escape" && !cliOverlay.hidden) {
+      closeCli();
+      return;
+    }
+
+    if (isTyping || event.ctrlKey || event.metaKey || event.altKey) return;
+
+    if (event.key === "`" || event.key === "/") {
+      event.preventDefault();
+      openCli();
+    }
   });
 }
 
@@ -563,6 +715,7 @@ const lifeCanvas = $("#life-canvas");
 const dataFlowCanvas = $("#data-flow-canvas");
 const lciCanvas = $("#lci-canvas");
 const floorplanCanvas = $("#floorplan-canvas");
+const scanCanvas = $("#scan-canvas");
 const dataFlowTelemetry = {
   backend: $("#df-backend"),
   count: $("#df-count"),
@@ -585,6 +738,16 @@ const floorplanTelemetry = {
   thermal: $("#fp-thermal"),
   routing: $("#fp-routing"),
   score: $("#fp-score")
+};
+const scanTelemetry = {
+  state: $("#scan-state"),
+  clock: $("#scan-clock"),
+  pins: $("#scan-pins"),
+  register: $("#scan-register"),
+  step: $("#scan-step"),
+  tms: $("#scan-tms"),
+  tdi: $("#scan-tdi"),
+  reset: $("#scan-reset")
 };
 const lifeControls = {
   state: $("#life-state"),
@@ -634,6 +797,10 @@ const setActiveComputeTab = (tabName) => {
   if (tabName === "floorplan") {
     requestAnimationFrame(renderFloorplan);
   }
+
+  if (tabName === "scan") {
+    requestAnimationFrame(renderScan);
+  }
 };
 
 computeTabs.forEach((tab) => {
@@ -656,6 +823,11 @@ const isLciVisible = () => {
 
 const isFloorplanVisible = () => {
   const panel = $("#floorplan-panel");
+  return Boolean(panel && !panel.hidden);
+};
+
+const isScanVisible = () => {
+  const panel = $("#scan-panel");
   return Boolean(panel && !panel.hidden);
 };
 
@@ -1505,6 +1677,292 @@ const initFloorplan = () => {
 };
 
 initFloorplan();
+
+const TAP_TRANSITIONS = {
+  TEST_LOGIC_RESET: { 0: "RUN_TEST_IDLE", 1: "TEST_LOGIC_RESET" },
+  RUN_TEST_IDLE: { 0: "RUN_TEST_IDLE", 1: "SELECT_DR_SCAN" },
+  SELECT_DR_SCAN: { 0: "CAPTURE_DR", 1: "SELECT_IR_SCAN" },
+  CAPTURE_DR: { 0: "SHIFT_DR", 1: "EXIT1_DR" },
+  SHIFT_DR: { 0: "SHIFT_DR", 1: "EXIT1_DR" },
+  EXIT1_DR: { 0: "PAUSE_DR", 1: "UPDATE_DR" },
+  PAUSE_DR: { 0: "PAUSE_DR", 1: "EXIT2_DR" },
+  EXIT2_DR: { 0: "SHIFT_DR", 1: "UPDATE_DR" },
+  UPDATE_DR: { 0: "RUN_TEST_IDLE", 1: "SELECT_DR_SCAN" },
+  SELECT_IR_SCAN: { 0: "CAPTURE_IR", 1: "TEST_LOGIC_RESET" },
+  CAPTURE_IR: { 0: "SHIFT_IR", 1: "EXIT1_IR" },
+  SHIFT_IR: { 0: "SHIFT_IR", 1: "EXIT1_IR" },
+  EXIT1_IR: { 0: "PAUSE_IR", 1: "UPDATE_IR" },
+  PAUSE_IR: { 0: "PAUSE_IR", 1: "EXIT2_IR" },
+  EXIT2_IR: { 0: "SHIFT_IR", 1: "UPDATE_IR" },
+  UPDATE_IR: { 0: "RUN_TEST_IDLE", 1: "SELECT_DR_SCAN" }
+};
+
+const TAP_NODE_POSITIONS = {
+  TEST_LOGIC_RESET: [0.12, 0.18],
+  RUN_TEST_IDLE: [0.32, 0.18],
+  SELECT_DR_SCAN: [0.52, 0.18],
+  SELECT_IR_SCAN: [0.74, 0.18],
+  CAPTURE_DR: [0.18, 0.38],
+  SHIFT_DR: [0.36, 0.38],
+  EXIT1_DR: [0.54, 0.38],
+  PAUSE_DR: [0.74, 0.38],
+  EXIT2_DR: [0.18, 0.58],
+  UPDATE_DR: [0.36, 0.58],
+  CAPTURE_IR: [0.54, 0.58],
+  SHIFT_IR: [0.74, 0.58],
+  EXIT1_IR: [0.18, 0.78],
+  PAUSE_IR: [0.36, 0.78],
+  EXIT2_IR: [0.54, 0.78],
+  UPDATE_IR: [0.74, 0.78]
+};
+
+let scanState = "TEST_LOGIC_RESET";
+let scanClock = 0;
+let scanTms = 1;
+let scanTdi = 0;
+let scanTdo = 0;
+let scanRegister = [1, 0, 1, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 0];
+let scanHistory = [];
+
+const syncScanCanvas = () => {
+  if (!scanCanvas) return { width: 0, height: 0 };
+  const rect = scanCanvas.getBoundingClientRect();
+  const width = Math.max(420, Math.floor(rect.width || 720));
+  const height = Math.max(360, Math.floor(rect.height || 420));
+
+  if (scanCanvas.width !== width || scanCanvas.height !== height) {
+    scanCanvas.width = width;
+    scanCanvas.height = height;
+  }
+
+  return { width, height };
+};
+
+const setScanTelemetry = () => {
+  if (scanTelemetry.state) scanTelemetry.state.textContent = scanState;
+  if (scanTelemetry.clock) scanTelemetry.clock.textContent = String(scanClock);
+  if (scanTelemetry.pins) scanTelemetry.pins.textContent = `${scanTms} / ${scanTdi} / ${scanTdo}`;
+  if (scanTelemetry.register) scanTelemetry.register.textContent = scanRegister.join("");
+  if (scanTelemetry.tms) scanTelemetry.tms.textContent = `TMS=${scanTms}`;
+  if (scanTelemetry.tdi) scanTelemetry.tdi.textContent = `TDI=${scanTdi}`;
+};
+
+const drawDigitalWave = (ctx, label, values, x, y, width, highColor) => {
+  const rowHeight = 24;
+  const step = width / Math.max(1, values.length || 1);
+
+  ctx.fillStyle = "#6b7280";
+  ctx.font = "10px JetBrains Mono, SFMono-Regular, Consolas, monospace";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  ctx.fillText(label, x - 52, y + 10);
+
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.14)";
+  ctx.beginPath();
+  ctx.moveTo(x, y + rowHeight);
+  ctx.lineTo(x + width, y + rowHeight);
+  ctx.stroke();
+
+  ctx.strokeStyle = highColor;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+
+  if (!values.length) {
+    ctx.moveTo(x, y + rowHeight);
+    ctx.lineTo(x + width, y + rowHeight);
+    ctx.stroke();
+    return;
+  }
+
+  values.forEach((value, index) => {
+    const x0 = x + index * step;
+    const x1 = x + (index + 1) * step;
+    const yy = value ? y : y + rowHeight;
+
+    if (index === 0) {
+      ctx.moveTo(x0, yy);
+    } else {
+      const prevY = values[index - 1] ? y : y + rowHeight;
+      ctx.lineTo(x0, prevY);
+      ctx.lineTo(x0, yy);
+    }
+
+    ctx.lineTo(x1, yy);
+  });
+
+  ctx.stroke();
+  ctx.lineWidth = 1;
+};
+
+function renderScan() {
+  if (!scanCanvas) return;
+  const ctx = scanCanvas.getContext("2d");
+  if (!ctx) return;
+  const { width, height } = syncScanCanvas();
+  const stateHeight = height * 0.54;
+  const nodeWidth = Math.max(86, width * 0.12);
+  const nodeHeight = 34;
+
+  ctx.fillStyle = "#020202";
+  ctx.fillRect(0, 0, width, height);
+
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.06)";
+  ctx.lineWidth = 1;
+  for (let x = 0; x <= width; x += 24) {
+    ctx.beginPath();
+    ctx.moveTo(x + 0.5, 0);
+    ctx.lineTo(x + 0.5, height);
+    ctx.stroke();
+  }
+  for (let y = 0; y <= height; y += 24) {
+    ctx.beginPath();
+    ctx.moveTo(0, y + 0.5);
+    ctx.lineTo(width, y + 0.5);
+    ctx.stroke();
+  }
+
+  const nodeCenters = {};
+  Object.entries(TAP_NODE_POSITIONS).forEach(([state, [nx, ny]]) => {
+    nodeCenters[state] = {
+      x: nx * width,
+      y: ny * stateHeight
+    };
+  });
+
+  const currentTransitions = TAP_TRANSITIONS[scanState];
+  [
+    { next: currentTransitions[0], label: "TMS0", color: "#7dd3fc" },
+    { next: currentTransitions[1], label: "TMS1", color: "#f59e0b" }
+  ].forEach((route, index) => {
+    const start = nodeCenters[scanState];
+    const end = nodeCenters[route.next];
+    if (!start || !end) return;
+
+    ctx.strokeStyle = route.color;
+    ctx.setLineDash(index ? [5, 5] : []);
+    ctx.beginPath();
+    ctx.moveTo(start.x, start.y);
+    ctx.lineTo(end.x, end.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = route.color;
+    ctx.font = "10px JetBrains Mono, SFMono-Regular, Consolas, monospace";
+    ctx.textAlign = "center";
+    ctx.fillText(route.label, (start.x + end.x) * 0.5, (start.y + end.y) * 0.5 - 6);
+  });
+
+  Object.entries(nodeCenters).forEach(([state, center]) => {
+    const active = state === scanState;
+    const x = center.x - nodeWidth * 0.5;
+    const y = center.y - nodeHeight * 0.5;
+
+    ctx.fillStyle = active ? "rgba(125, 211, 252, 0.12)" : "#0a0a0a";
+    ctx.fillRect(x, y, nodeWidth, nodeHeight);
+    ctx.strokeStyle = active ? "#7dd3fc" : "rgba(255, 255, 255, 0.18)";
+    ctx.lineWidth = active ? 2 : 1;
+    ctx.strokeRect(x + 0.5, y + 0.5, nodeWidth - 1, nodeHeight - 1);
+    ctx.fillStyle = active ? "#e5e7eb" : "#6b7280";
+    ctx.font = "9px JetBrains Mono, SFMono-Regular, Consolas, monospace";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(state.replace("TEST_LOGIC_", "TEST_").replace("_SCAN", ""), center.x, center.y);
+  });
+
+  const registerY = stateHeight + 14;
+  const registerX = 64;
+  const cellWidth = Math.min(30, (width - registerX - 24) / scanRegister.length);
+  ctx.fillStyle = "#9ca3af";
+  ctx.font = "10px JetBrains Mono, SFMono-Regular, Consolas, monospace";
+  ctx.textAlign = "left";
+  ctx.fillText("SCAN_CHAIN[15:0]", 18, registerY + 18);
+
+  scanRegister.forEach((bit, index) => {
+    const x = registerX + index * cellWidth;
+    ctx.fillStyle = bit ? "rgba(125, 211, 252, 0.22)" : "#0a0a0a";
+    ctx.fillRect(x, registerY, cellWidth, 26);
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.18)";
+    ctx.strokeRect(x + 0.5, registerY + 0.5, cellWidth - 1, 25);
+    ctx.fillStyle = bit ? "#7dd3fc" : "#6b7280";
+    ctx.textAlign = "center";
+    ctx.fillText(String(bit), x + cellWidth * 0.5, registerY + 17);
+  });
+
+  const samples = scanHistory.slice(-24);
+  const tckValues = samples.map((_, index) => index % 2);
+  const tmsValues = samples.map((sample) => sample.tms);
+  const tdiValues = samples.map((sample) => sample.tdi);
+  const tdoValues = samples.map((sample) => sample.tdo);
+  const waveX = 70;
+  const waveWidth = width - waveX - 24;
+  const waveStart = registerY + 58;
+  drawDigitalWave(ctx, "TCK", tckValues, waveX, waveStart, waveWidth, "#e5e7eb");
+  drawDigitalWave(ctx, "TMS", tmsValues, waveX, waveStart + 34, waveWidth, "#f59e0b");
+  drawDigitalWave(ctx, "TDI", tdiValues, waveX, waveStart + 68, waveWidth, "#7dd3fc");
+  drawDigitalWave(ctx, "TDO", tdoValues, waveX, waveStart + 102, waveWidth, "#9ca3af");
+
+  setScanTelemetry();
+}
+
+const stepScan = () => {
+  const previousState = scanState;
+  const shiftActive = previousState === "SHIFT_DR" || previousState === "SHIFT_IR";
+
+  if (shiftActive) {
+    scanTdo = scanRegister[scanRegister.length - 1];
+    scanRegister.pop();
+    scanRegister.unshift(scanTdi);
+  } else {
+    scanTdo = 0;
+  }
+
+  scanState = TAP_TRANSITIONS[scanState][scanTms];
+  scanClock += 1;
+  scanHistory.push({
+    tms: scanTms,
+    tdi: scanTdi,
+    tdo: scanTdo,
+    state: scanState,
+    shifted: shiftActive
+  });
+
+  if (scanHistory.length > 32) scanHistory = scanHistory.slice(-32);
+  renderScan();
+};
+
+const resetScan = () => {
+  scanState = "TEST_LOGIC_RESET";
+  scanClock = 0;
+  scanTms = 1;
+  scanTdi = 0;
+  scanTdo = 0;
+  scanRegister = [1, 0, 1, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 0];
+  scanHistory = [];
+  renderScan();
+};
+
+const initScan = () => {
+  if (!scanCanvas) return;
+
+  scanTelemetry.step?.addEventListener("click", stepScan);
+  scanTelemetry.tms?.addEventListener("click", () => {
+    scanTms = scanTms ? 0 : 1;
+    renderScan();
+  });
+  scanTelemetry.tdi?.addEventListener("click", () => {
+    scanTdi = scanTdi ? 0 : 1;
+    renderScan();
+  });
+  scanTelemetry.reset?.addEventListener("click", resetScan);
+
+  window.addEventListener("resize", () => {
+    if (isScanVisible()) renderScan();
+  });
+
+  setScanTelemetry();
+};
+
+initScan();
 
 const setTelemetry = (key, value) => {
   if (telemetryTargets[key]) telemetryTargets[key].textContent = value;

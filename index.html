@@ -220,6 +220,7 @@
               <button class="compute-tab" id="tab-life" type="button" role="tab" aria-selected="false" aria-controls="life-panel" data-tab="life">GAME_OF_LIFE</button>
               <button class="compute-tab" id="tab-lci" type="button" role="tab" aria-selected="false" aria-controls="lci-panel" data-tab="lci">LCI_MODEL</button>
               <button class="compute-tab" id="tab-floorplan" type="button" role="tab" aria-selected="false" aria-controls="floorplan-panel" data-tab="floorplan">FLOORPLAN_SOLVER</button>
+              <button class="compute-tab" id="tab-scan" type="button" role="tab" aria-selected="false" aria-controls="scan-panel" data-tab="scan">SCAN_CHAIN</button>
             </div>
 
             <div class="compute-panel active" id="matrix-panel" role="tabpanel" aria-labelledby="tab-matrix">
@@ -328,6 +329,31 @@
                 </div>
               </div>
             </div>
+
+            <div class="compute-panel" id="scan-panel" role="tabpanel" aria-labelledby="tab-scan" hidden>
+              <div class="compute-header scan-header">
+                <span>[TARGET]: IEEE 1149.1 TAP / Scan Chain Visualizer</span>
+                <span>EDGE_STEPPED</span>
+              </div>
+              <div class="compute-body scan-body">
+                <canvas id="scan-canvas" width="720" height="420" aria-label="Interactive JTAG TAP and scan chain timing diagram"></canvas>
+                <div class="telemetry-grid scan-telemetry">
+                  <div>TAP STATE: <span id="scan-state">TEST_LOGIC_RESET</span></div>
+                  <div>TCK EDGE: <span id="scan-clock">0</span></div>
+                  <div>TMS/TDI/TDO: <span id="scan-pins">1 / 0 / 0</span></div>
+                  <div>SHIFT REGISTER: <span id="scan-register">--</span></div>
+                </div>
+              </div>
+              <div class="compute-status scan-controls">
+                <span>PROTOCOL: <strong>JTAG TAP FSM // SERIAL OBSERVABILITY</strong></span>
+                <div class="scan-buttons" aria-label="Scan chain controls">
+                  <button type="button" id="scan-step">TCK_STEP</button>
+                  <button type="button" id="scan-tms">TMS=1</button>
+                  <button type="button" id="scan-tdi">TDI=0</button>
+                  <button type="button" id="scan-reset">RESET</button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -424,6 +450,23 @@
               <p>
                 Before validating AI silicon, engineering execution was focused on the atomic and physical layer. Pioneered nanotextured coatings for Titanium and PEEK spinal implants in collaboration with Dr. Thomas J. Webster, achieving a 50% measured improvement in osseointegration and biocompatibility. Applied rigorous product-engineering constraints to selective laser melting (SLM) processes, simulating thermomechanical stress via DigiMat to drive a 20% factory yield increase. It was an early exercise in bridging materials science with scalable manufacturing quality.
               </p>
+            </article>
+
+            <article class="artifact-card patent-card reveal-up">
+              <div class="artifact-tags">
+                <p class="metadata-tag">[METADATA: PATENT // US-12172378-B1]</p>
+                <p class="metadata-tag">[DOMAIN: NANOTEXTURED IMPLANTS]</p>
+              </div>
+              <h3>Method and System of Controlling Cell Functions on 3D Printed and 3D Manufactured Materials Modified With Lipases</h3>
+              <p>
+                I am listed as a co-inventor on this granted patent from my materials and manufacturing work. The invention sits at the physical layer: modifying additively manufactured implant surfaces to change roughness, surface energy, and biological interaction. It is a useful trace of where my reliability mindset started before I moved up the stack into silicon validation.
+              </p>
+              <div class="patent-spec">
+                <p>PATENT: <span>US 12,172,378 B1</span></p>
+                <p>ISSUED: <span>DEC 24, 2024</span></p>
+                <p>ASSIGNEE: <span>ZEDA HOLDINGS, INC.</span></p>
+              </div>
+              <a class="artifact-link" href="https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12172378" target="_blank" rel="noopener noreferrer">Open USPTO Patent PDF [External]</a>
             </article>
           </div>
         </div>
@@ -549,6 +592,20 @@
         </div>
       </form>
     </dialog>
+
+    <div class="cli-overlay" id="cli-overlay" hidden>
+      <div class="cli-terminal" role="dialog" aria-modal="true" aria-labelledby="cli-title">
+        <div class="cli-titlebar">
+          <p id="cli-title">[LOCAL_SHELL // ADITYA_MOREY]</p>
+          <button type="button" id="cli-close" aria-label="Close local shell">x</button>
+        </div>
+        <div class="cli-output" id="cli-output" aria-live="polite"></div>
+        <form class="cli-form" id="cli-form" autocomplete="off">
+          <label for="cli-input">am@portfolio:~$</label>
+          <input id="cli-input" type="text" spellcheck="false" aria-label="Local shell command" />
+        </form>
+      </div>
+    </div>
 
     <script src="script.js"></script>
   </body>
