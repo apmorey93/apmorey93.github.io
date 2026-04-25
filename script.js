@@ -561,12 +561,21 @@ const computeTabs = $$(".compute-tab");
 const computePanels = $$(".compute-panel");
 const lifeCanvas = $("#life-canvas");
 const dataFlowCanvas = $("#data-flow-canvas");
+const lciCanvas = $("#lci-canvas");
 const dataFlowTelemetry = {
   backend: $("#df-backend"),
   count: $("#df-count"),
   compute: $("#df-compute"),
   state: $("#df-state"),
   motion: $("#df-motion-status")
+};
+const lciControls = {
+  latency: $("#lci-latency"),
+  reliability: $("#lci-reliability"),
+  latencyValue: $("#lci-latency-val"),
+  reliabilityValue: $("#lci-reliability-val"),
+  mstack: $("#lci-mstack-val"),
+  standard: $("#lci-std-val")
 };
 const lifeControls = {
   state: $("#life-state"),
@@ -608,6 +617,10 @@ const setActiveComputeTab = (tabName) => {
   if (tabName === "flow") {
     ensureDataFlow();
   }
+
+  if (tabName === "lci") {
+    requestAnimationFrame(drawLCI);
+  }
 };
 
 computeTabs.forEach((tab) => {
@@ -620,6 +633,11 @@ const setDataFlowTelemetry = (key, value) => {
 
 const isDataFlowVisible = () => {
   const panel = $("#flow-panel");
+  return Boolean(panel && !panel.hidden);
+};
+
+const isLciVisible = () => {
+  const panel = $("#lci-panel");
   return Boolean(panel && !panel.hidden);
 };
 
@@ -1061,6 +1079,119 @@ function runCpuDataFlow(canvas, pointer) {
 
   animationId = requestAnimationFrame(frame);
   return () => cancelAnimationFrame(animationId);
+}
+
+const syncLciCanvas = () => {
+  if (!lciCanvas) return { width: 0, height: 0 };
+  const rect = lciCanvas.getBoundingClientRect();
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const width = Math.max(360, Math.floor((rect.width || 640) * dpr));
+  const height = Math.max(280, Math.floor((rect.height || 384) * dpr));
+
+  if (lciCanvas.width !== width || lciCanvas.height !== height) {
+    lciCanvas.width = width;
+    lciCanvas.height = height;
+  }
+
+  return { width, height };
+};
+
+function drawLCI() {
+  if (!lciCanvas) return;
+  const ctx = lciCanvas.getContext("2d");
+  if (!ctx) return;
+
+  const { width, height } = syncLciCanvas();
+  const latency = Number(lciControls.latency ? lciControls.latency.value : 50);
+  const reliabilityPct = Number(lciControls.reliability ? lciControls.reliability.value : 99);
+  const reliability = reliabilityPct / 100;
+  const reliabilityPressure = 1 + Math.pow((reliability - 0.9) / 0.0999, 2) * 0.42;
+  const plot = {
+    left: 52,
+    right: width - 24,
+    top: 26,
+    bottom: height - 42
+  };
+  const plotWidth = plot.right - plot.left;
+  const plotHeight = plot.bottom - plot.top;
+
+  const standardCost = (distance) =>
+    24 + Math.pow(distance, 2.25) * latency * 1.32 * reliabilityPressure + distance * 18;
+  const mstackCost = (distance) =>
+    36 + distance * latency * 0.23 * reliabilityPressure + Math.pow(distance, 1.35) * 9;
+  const maxCost = Math.max(standardCost(1), mstackCost(1), 130) * 1.12;
+  const toX = (distance) => plot.left + distance * plotWidth;
+  const toY = (cost) => plot.bottom - (cost / maxCost) * plotHeight;
+
+  ctx.fillStyle = "#020202";
+  ctx.fillRect(0, 0, width, height);
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.11)";
+  ctx.lineWidth = 1;
+
+  for (let x = plot.left; x <= plot.right; x += 40) {
+    ctx.beginPath();
+    ctx.moveTo(x + 0.5, plot.top);
+    ctx.lineTo(x + 0.5, plot.bottom);
+    ctx.stroke();
+  }
+
+  for (let y = plot.top; y <= plot.bottom; y += 40) {
+    ctx.beginPath();
+    ctx.moveTo(plot.left, y + 0.5);
+    ctx.lineTo(plot.right, y + 0.5);
+    ctx.stroke();
+  }
+
+  ctx.strokeStyle = "rgba(229, 231, 235, 0.35)";
+  ctx.beginPath();
+  ctx.moveTo(plot.left, plot.top);
+  ctx.lineTo(plot.left, plot.bottom);
+  ctx.lineTo(plot.right, plot.bottom);
+  ctx.stroke();
+
+  const drawCurve = (costFn, color) => {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+
+    for (let index = 0; index <= 160; index += 1) {
+      const distance = index / 160;
+      const x = toX(distance);
+      const y = toY(costFn(distance));
+      if (index === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+
+    ctx.stroke();
+  };
+
+  drawCurve(standardCost, "#f59e0b");
+  drawCurve(mstackCost, "#7dd3fc");
+
+  ctx.font = "12px JetBrains Mono, SFMono-Regular, Consolas, monospace";
+  ctx.fillStyle = "rgba(229, 231, 235, 0.78)";
+  ctx.fillText("EDGE", plot.left, height - 14);
+  ctx.fillText("CLOUD", plot.right - 46, height - 14);
+  ctx.fillText("COST", 10, plot.top + 8);
+  ctx.fillStyle = "#7dd3fc";
+  ctx.fillText("M-STACK", plot.left + 16, toY(mstackCost(0.42)) - 10);
+  ctx.fillStyle = "#f59e0b";
+  ctx.fillText("STANDARD", plot.left + plotWidth * 0.58, toY(standardCost(0.58)) - 12);
+
+  const mstackFinal = mstackCost(1);
+  const standardFinal = standardCost(1);
+  if (lciControls.latencyValue) lciControls.latencyValue.textContent = latency.toFixed(0);
+  if (lciControls.reliabilityValue) lciControls.reliabilityValue.textContent = `${reliabilityPct.toFixed(2)}%`;
+  if (lciControls.mstack) lciControls.mstack.textContent = mstackFinal.toFixed(1);
+  if (lciControls.standard) lciControls.standard.textContent = standardFinal.toFixed(1);
+}
+
+if (lciControls.latency && lciControls.reliability) {
+  lciControls.latency.addEventListener("input", drawLCI);
+  lciControls.reliability.addEventListener("input", drawLCI);
+  window.addEventListener("resize", () => {
+    if (isLciVisible()) drawLCI();
+  });
 }
 
 const setTelemetry = (key, value) => {

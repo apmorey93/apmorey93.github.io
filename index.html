@@ -218,6 +218,7 @@
               <button class="compute-tab active" id="tab-matrix" type="button" role="tab" aria-selected="true" aria-controls="matrix-panel" data-tab="matrix">MATRIX_KERNEL</button>
               <button class="compute-tab" id="tab-flow" type="button" role="tab" aria-selected="false" aria-controls="flow-panel" data-tab="flow">DATA_FLOW</button>
               <button class="compute-tab" id="tab-life" type="button" role="tab" aria-selected="false" aria-controls="life-panel" data-tab="life">GAME_OF_LIFE</button>
+              <button class="compute-tab" id="tab-lci" type="button" role="tab" aria-selected="false" aria-controls="lci-panel" data-tab="lci">LCI_MODEL</button>
             </div>
 
             <div class="compute-panel active" id="matrix-panel" role="tabpanel" aria-labelledby="tab-matrix">
@@ -276,6 +277,30 @@
                   <button type="button" id="life-random">RANDOMIZE</button>
                   <button type="button" id="life-clear">CLEAR</button>
                 </div>
+              </div>
+            </div>
+
+            <div class="compute-panel" id="lci-panel" role="tabpanel" aria-labelledby="tab-lci" hidden>
+              <div class="compute-header">[TARGET]: Locational Cost of Intelligence Curve</div>
+              <div class="compute-body lci-body">
+                <canvas id="lci-canvas" width="640" height="384" aria-label="LCI cost-efficiency curve graph"></canvas>
+                <div class="telemetry-grid lci-telemetry">
+                  <div class="lci-control">
+                    <label for="lci-latency">NETWORK LATENCY PENALTY</label>
+                    <input type="range" id="lci-latency" min="1" max="100" value="50" />
+                    <span id="lci-latency-val">50</span>
+                  </div>
+                  <div class="lci-control">
+                    <label for="lci-reliability">INFRASTRUCTURE RELIABILITY</label>
+                    <input type="range" id="lci-reliability" min="90" max="99.99" step="0.01" value="99.0" />
+                    <span id="lci-reliability-val">99.00%</span>
+                  </div>
+                  <div>M-STACK COST: <span id="lci-mstack-val">--</span></div>
+                  <div>STANDARD COST: <span id="lci-std-val">--</span></div>
+                </div>
+              </div>
+              <div class="compute-status">
+                <span>FORMULA: <strong>Cost = f(Compute, 1 / Latency) x Reliability</strong></span>
               </div>
             </div>
           </div>

@@ -592,7 +592,7 @@ svg {
 
 .compute-tabs {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   border-bottom: 1px solid var(--line);
 }
 
@@ -647,7 +647,8 @@ svg {
 
 #compute-canvas,
 #life-canvas,
-#data-flow-canvas {
+#data-flow-canvas,
+#lci-canvas {
   width: 100%;
   height: 100%;
   border: 0;
@@ -657,7 +658,8 @@ svg {
 }
 
 #compute-canvas,
-#life-canvas {
+#life-canvas,
+#lci-canvas {
   min-height: 360px;
 }
 
@@ -679,6 +681,10 @@ svg {
   border-right: 0;
 }
 
+#lci-canvas {
+  height: 360px;
+}
+
 .telemetry-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -686,6 +692,58 @@ svg {
 
 .flow-telemetry {
   grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.lci-body {
+  grid-template-columns: minmax(340px, 1fr) minmax(320px, 0.72fr);
+}
+
+.lci-telemetry {
+  align-content: stretch;
+}
+
+.lci-control {
+  grid-column: span 2;
+}
+
+.lci-control label {
+  display: block;
+  margin-bottom: 18px;
+  color: var(--muted);
+  font-size: 0.68rem;
+  letter-spacing: 0;
+}
+
+.lci-control input[type="range"] {
+  width: 100%;
+  height: 2px;
+  margin: 10px 0 12px;
+  appearance: none;
+  background: rgba(255, 255, 255, 0.16);
+  cursor: pointer;
+}
+
+.lci-control input[type="range"]::-webkit-slider-thumb {
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--line);
+  appearance: none;
+  background: var(--blue);
+}
+
+.lci-control input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--line);
+  background: var(--blue);
+}
+
+#lci-reliability::-webkit-slider-thumb {
+  background: var(--amber);
+}
+
+#lci-reliability::-moz-range-thumb {
+  background: var(--amber);
 }
 
 .telemetry-grid div {
@@ -1139,12 +1197,14 @@ svg {
   #compute-canvas,
   #life-canvas,
   #data-flow-canvas,
+  #lci-canvas,
   .artifact-card {
     border-right: 0;
   }
 
   #compute-canvas,
   #life-canvas,
+  #lci-canvas,
   .data-flow-stage {
     border-bottom: 1px solid var(--line);
   }
@@ -1163,6 +1223,10 @@ svg {
 
   .flow-telemetry div:nth-child(2n) {
     border-right: 0;
+  }
+
+  .lci-control {
+    grid-column: span 1;
   }
 
   .telemetry-grid div {
