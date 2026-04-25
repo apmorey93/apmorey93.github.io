@@ -13,10 +13,20 @@ const cliOutput = $("#cli-output");
 const cliForm = $("#cli-form");
 const cliInput = $("#cli-input");
 const cliClose = $("#cli-close");
+const cliLogin = $("#cli-login");
+const cliMobileOpen = $("#cli-mobile-open");
 const root = document.documentElement;
 
 const reducedMotion =
   typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+const trackEvent = (name, payload = {}) => {
+  if (typeof window.gtag === "function") {
+    window.gtag("event", name, payload);
+  }
+
+  window.dispatchEvent(new CustomEvent(name, { detail: payload }));
+};
 
 const setMenu = (isOpen) => {
   if (!navToggle || !mobileMenu) return;
@@ -172,16 +182,143 @@ if (infraOpen && infraModal) {
   });
 }
 
-const cliLines = [
-  { text: "boot: local shell attached. type `help`.", tone: "ok" },
-  { text: "hint: `scan` jumps to the TAP visualizer." }
+const cliLines = [];
+const cliHistory = [];
+let cliHistoryIndex = 0;
+let cliWriteTimer = 0;
+
+const cliCommands = [
+  "whoami",
+  "ls",
+  "cat resume.pdf",
+  "cat patent_12172378.txt",
+  "ping adityamorey.com",
+  "ssh adi@nvidia.com",
+  "sudo rm -rf /",
+  "uname -a",
+  "top",
+  "cat /etc/hosts",
+  "history",
+  "man adi",
+  "neofetch",
+  "help",
+  "clear",
+  "exit",
+  "matrix",
+  "scan",
+  "fault",
+  "lci",
+  "floorplan",
+  "life",
+  "patent"
 ];
+
+const cliCommandOutput = {
+  whoami: `adi
+// senior dfx methodology engineer
+// ai/hpc silicon // nvidia corporation
+// san jose, ca`,
+  ls: `drwxr-xr-x  research/
+drwxr-xr-x  artifacts/
+drwxr-xr-x  systems/
+-rw-r--r--  resume.pdf          [CONTROLLED ACCESS]
+-rw-r--r--  lci_paper.pdf       [PUBLIC // SSRN]
+-rw-r--r--  patent_12172378.txt [USPTO REGISTERED]
+-rw-r--r--  nead_arch.md        [IN DEVELOPMENT]
+-rwx------  cuverif.bin         [PROPRIETARY]`,
+  "cat resume.pdf": `ERROR: resume.pdf requires authentication
+HINT: fastest path is adityamorey1723@gmail.com
+// or just ask nicely`,
+  "cat patent_12172378.txt": `US PATENT: US-12172378-B1
+STATUS: GRANTED
+INVENTOR: ADITYA MOREY
+DOMAIN: [REDACTED PENDING REVIEW]
+USPTO: patents.google.com/patent/US12172378B1
+// this one's real`,
+  "ping adityamorey.com": `PING adityamorey.com (104.21.x.x): 56 bytes
+64 bytes from 104.21.x.x: icmp_seq=0 ttl=57 time=1.337 ms
+64 bytes from 104.21.x.x: icmp_seq=1 ttl=57 time=1.337 ms
+64 bytes from 104.21.x.x: icmp_seq=2 ttl=57 time=1.337 ms
+// round trip complete. you're already here.`,
+  "ssh adi@nvidia.com": `Connecting to adi@nvidia.com...
+Permission denied (publickey,gssapi-keyex,gssapi-with-mic)
+// as expected. try adityamorey1723@gmail.com instead.`,
+  "sudo rm -rf /": `adi is not in the sudoers file.
+This incident will be reported.
+// nice try. this is a portfolio site, not a prod cluster.`,
+  "uname -a": `DFX-OS 5.15.0-dfx-amd64 #1 SMP PREEMPT
+IEEE-1149.1 COMPLIANT // JTAG ACCESSIBLE
+SCAN CHAINS: 47 LOADED
+BIST STATUS: PASS`,
+  top: `PID   PROCESS              CPU%   MEM
+001   scan_methodology     88.2   2.1GB
+002   silicon_debug        44.1   1.3GB
+003   lci_research         31.7   890MB
+004   charcoal_studies      2.1   minimal
+005   open_water_swim       0.0   [OFFLINE]
+// system load: high. always.`,
+  "cat /etc/hosts": `127.0.0.1     localhost
+127.0.0.1     dfx-workstation-01
+10.0.0.1      silicon.internal
+10.0.0.2      scan-debug.internal
+10.0.0.3      bist-validation.internal
+// the real ones aren't listed here`,
+  history: `  1  git clone nvidia/dfx-methodology
+  2  vim scan_architecture.v
+  3  run_simulation --coverage=full --corner=ss_125c
+  4  debug_scan_chain --chain=47 --verbose
+  5  grep -r "BIST_FAIL" logs/ | sort -u
+  6  python lci_model.py --region=us-west --latency=120ms
+  7  ssh tapeout-server "check_coverage --threshold=99.2"
+  8  cat /dev/null > regrets.txt
+  9  vim nead_architecture.md
+ 10  cd adityamorey.com && git push`,
+  "man adi": `ADI(1)                   User Commands                   ADI(1)
+
+NAME
+       adi - senior dfx methodology engineer
+
+SYNOPSIS
+       adi [--dfx] [--research] [--debug CHIP] [--hire]
+
+DESCRIPTION
+       Builds silicon observability infrastructure for AI/HPC.
+       Specializes in scan, JTAG/IJTAG, BIST, secure DFX,
+       post-silicon bringup, and test methodology at scale.
+
+OPTIONS
+       --dfx          IEEE 1149.1, 1500, 1687 methodology
+       --research     LCI framework, NeAd architecture
+       --debug CHIP   requires NDA and coffee
+       --hire         see: adityamorey1723@gmail.com
+
+SEE ALSO
+       linkedin(1), ssrn(1), uspto(1)`,
+  neofetch: `         ▄▄▄▄▄▄▄▄▄▄           adi@dfx-workstation
+        ██████████████         ─────────────────────
+       ████▀▀▀▀▀▀████         OS: DFX-OS 5.15.0
+      ████  ██████  ████       Host: NVIDIA AI/HPC
+     ████  ████████  ████      Kernel: IEEE-1149.1
+    ████████████████████       Uptime: 6 yrs, always on
+   ██████████████████████      Shell: dfx-sh 2.4.1
+                               CPU: Scan Methodology
+                               GPU: WebGPU (you're using it)
+                               Memory: 2.1GB / research
+                               Patent: US-12172378-B1`
+};
+
+const cliAliases = {
+  "cat resume.txt": "cat resume.pdf",
+  "cat patent.txt": "cat patent_12172378.txt",
+  "ssh adi@nvidia": "ssh adi@nvidia.com",
+  sudo: "sudo rm -rf /"
+};
 
 const renderCli = () => {
   if (!cliOutput) return;
   cliOutput.replaceChildren();
 
-  cliLines.slice(-44).forEach((line) => {
+  cliLines.slice(-96).forEach((line) => {
     const row = document.createElement("p");
     row.className = `cli-line ${line.tone || ""}`.trim();
     row.textContent = line.text;
@@ -191,18 +328,38 @@ const renderCli = () => {
   cliOutput.scrollTop = cliOutput.scrollHeight;
 };
 
-const writeCli = (text, tone = "") => {
+const writeCliImmediate = (text, tone = "") => {
   String(text)
     .split("\n")
     .forEach((line) => cliLines.push({ text: line, tone }));
   renderCli();
 };
 
+const writeCliTyped = (text, tone = "") => {
+  window.clearTimeout(cliWriteTimer);
+  const lines = String(text).split("\n");
+
+  lines.forEach((line, index) => {
+    cliWriteTimer = window.setTimeout(() => {
+      cliLines.push({ text: line, tone });
+      renderCli();
+    }, index * 40);
+  });
+};
+
 const openCli = () => {
   if (!cliOverlay || !cliInput) return;
   cliOverlay.hidden = false;
-  renderCli();
+  if (cliLogin) cliLogin.textContent = `Last login: ${new Date().toLocaleString()}`;
+
+  if (!cliLines.length) {
+    writeCliImmediate("boot: secure shell attached. type `help`.", "ok");
+  } else {
+    renderCli();
+  }
+
   requestAnimationFrame(() => cliInput.focus());
+  trackEvent("feature_interact", { feature: "cli_terminal", command: "open" });
 };
 
 const closeCli = () => {
@@ -217,71 +374,82 @@ const jumpToCompute = (tabName) => {
 };
 
 const runCliCommand = (rawCommand) => {
-  const command = rawCommand.trim();
-  if (!command) return;
+  const typedCommand = rawCommand.trim();
+  if (!typedCommand) return;
 
-  writeCli(`am@portfolio:~$ ${command}`, "command");
+  const normalized = cliAliases[typedCommand.toLowerCase()] || typedCommand.toLowerCase();
+  writeCliImmediate(`adi@dfx-ws:~$ ${typedCommand}`, "command");
+  cliHistory.push(typedCommand);
+  cliHistoryIndex = cliHistory.length;
+  trackEvent("feature_interact", { feature: "cli_terminal", command: normalized });
 
-  switch (command.toLowerCase()) {
-    case "help":
-      writeCli("commands: ls, whoami, cat resume.txt, cat patent.txt, scan, matrix, lci, floorplan, life, patent, ping adityamorey.com, ssh adi@nvidia, sudo, clear, exit");
-      break;
-    case "ls":
-      writeCli("compute/  artifacts/  trajectory/  contact/  resume.txt  patent.txt");
-      break;
-    case "whoami":
-      writeCli("aditya_morey // senior_ai_hardware_dfx_engineer // static_site_userland", "ok");
-      break;
-    case "cat resume.txt":
-      writeCli("resume: controlled access. email adityamorey1723@gmail.com with context and I will send it.");
-      break;
-    case "cat patent.txt":
-      writeCli("US 12,172,378 B1 // issued Dec 24, 2024 // nanotextured 3D printed implant surfaces modified with lipases.", "ok");
-      break;
-    case "scan":
-      writeCli("routing to TAP visualizer...", "ok");
-      jumpToCompute("scan");
-      break;
-    case "matrix":
-      writeCli("routing to WebGPU matrix kernel...", "ok");
-      jumpToCompute("matrix");
-      break;
-    case "lci":
-      writeCli("routing to LCI model...", "ok");
-      jumpToCompute("lci");
-      break;
-    case "floorplan":
-      writeCli("routing to floorplan constraint solver...", "ok");
-      jumpToCompute("floorplan");
-      break;
-    case "life":
-      writeCli("routing to cellular automata memory...", "ok");
-      jumpToCompute("life");
-      break;
-    case "patent":
-      writeCli("opening official USPTO patent PDF...", "ok");
-      window.open("https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12172378", "_blank", "noopener,noreferrer");
-      break;
-    case "ping adityamorey.com":
-      writeCli("64 bytes from edge: ttl=static time=local\npackets transmitted: 4, received: 4, loss: 0%");
-      break;
-    case "ssh adi@nvidia":
-      writeCli("permission denied (publickey). correct outcome.", "warn");
-      break;
-    case "sudo":
-    case "sudo su":
-      writeCli("sudo: this is a static page. privilege boundary remains physical.", "warn");
-      break;
-    case "clear":
-      cliLines.length = 0;
-      renderCli();
-      break;
-    case "exit":
-      closeCli();
-      break;
-    default:
-      writeCli(`${command}: command not found. type \`help\`.`, "warn");
-      break;
+  if (normalized === "clear") {
+    cliLines.length = 0;
+    renderCli();
+    return;
+  }
+
+  if (normalized === "exit") {
+    closeCli();
+    return;
+  }
+
+  if (normalized === "help") {
+    writeCliTyped(`available commands:
+  whoami
+  ls
+  cat resume.pdf
+  cat patent_12172378.txt
+  ping adityamorey.com
+  ssh adi@nvidia.com
+  sudo rm -rf /
+  uname -a
+  top
+  cat /etc/hosts
+  history
+  man adi
+  neofetch
+  clear
+  exit
+
+navigation aliases:
+  matrix  scan  fault  lci  floorplan  life  patent`, "ok");
+    return;
+  }
+
+  if (cliCommandOutput[normalized]) {
+    writeCliTyped(cliCommandOutput[normalized], normalized.includes("sudo") ? "warn" : "ok");
+    return;
+  }
+
+  if (normalized === "patent") {
+    writeCliTyped("opening: patents.google.com/patent/US12172378B1", "ok");
+    window.open("https://patents.google.com/patent/US12172378B1", "_blank", "noopener,noreferrer");
+    return;
+  }
+
+  if (["matrix", "scan", "fault", "lci", "floorplan", "life"].includes(normalized)) {
+    writeCliTyped(`routing to ${normalized.toUpperCase()}...`, "ok");
+    jumpToCompute(normalized);
+    return;
+  }
+
+  writeCliTyped(`command not found: ${typedCommand}. try 'help' for available commands.`, "warn");
+};
+
+const completeCliCommand = () => {
+  if (!cliInput) return;
+  const value = cliInput.value.toLowerCase();
+  if (!value) return;
+  const matches = cliCommands.filter((command) => command.startsWith(value));
+
+  if (matches.length === 1) {
+    cliInput.value = matches[0];
+    return;
+  }
+
+  if (matches.length > 1) {
+    writeCliTyped(matches.join("    "), "dim");
   }
 };
 
@@ -292,7 +460,27 @@ if (cliOverlay && cliForm && cliInput) {
     cliInput.value = "";
   });
 
+  cliInput.addEventListener("keydown", (event) => {
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      cliHistoryIndex = Math.max(0, cliHistoryIndex - 1);
+      cliInput.value = cliHistory[cliHistoryIndex] || "";
+    }
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      cliHistoryIndex = Math.min(cliHistory.length, cliHistoryIndex + 1);
+      cliInput.value = cliHistory[cliHistoryIndex] || "";
+    }
+
+    if (event.key === "Tab") {
+      event.preventDefault();
+      completeCliCommand();
+    }
+  });
+
   cliClose?.addEventListener("click", closeCli);
+  cliMobileOpen?.addEventListener("click", openCli);
   cliOverlay.addEventListener("click", (event) => {
     if (event.target === cliOverlay) closeCli();
   });
@@ -716,6 +904,7 @@ const dataFlowCanvas = $("#data-flow-canvas");
 const lciCanvas = $("#lci-canvas");
 const floorplanCanvas = $("#floorplan-canvas");
 const scanCanvas = $("#scan-canvas");
+const faultCanvas = $("#fault-canvas");
 const dataFlowTelemetry = {
   backend: $("#df-backend"),
   count: $("#df-count"),
@@ -748,6 +937,19 @@ const scanTelemetry = {
   tms: $("#scan-tms"),
   tdi: $("#scan-tdi"),
   reset: $("#scan-reset")
+};
+const faultTelemetry = {
+  pc: $("#fault-pc"),
+  cycle: $("#fault-cycle"),
+  count: $("#fault-count"),
+  flushes: $("#fault-flushes"),
+  lost: $("#fault-lost"),
+  ipc: $("#fault-ipc"),
+  annotation: $("#fault-annotation"),
+  speed: $("#fault-speed"),
+  speedValue: $("#fault-speed-value"),
+  clockLabel: $("#fault-clock-label"),
+  registers: $("#fault-register-grid")
 };
 const lifeControls = {
   state: $("#life-state"),
@@ -801,6 +1003,11 @@ const setActiveComputeTab = (tabName) => {
   if (tabName === "scan") {
     requestAnimationFrame(renderScan);
   }
+
+  if (tabName === "fault") {
+    ensureFaultEngine();
+    requestAnimationFrame(renderFault);
+  }
 };
 
 computeTabs.forEach((tab) => {
@@ -828,6 +1035,11 @@ const isFloorplanVisible = () => {
 
 const isScanVisible = () => {
   const panel = $("#scan-panel");
+  return Boolean(panel && !panel.hidden);
+};
+
+const isFaultVisible = () => {
+  const panel = $("#fault-panel");
   return Boolean(panel && !panel.hidden);
 };
 
@@ -1110,7 +1322,7 @@ fn fs_main(@location(0) speed: f32) -> @location(0) vec4<f32> {
   setDataFlowTelemetry("count", particleCount.toLocaleString("en-US"));
   setDataFlowTelemetry("compute", "WGSL_COMPUTE+POINT_LIST");
   setDataFlowTelemetry("state", "ACTIVE_FLOW");
-  if (dataFlowTelemetry.backend) dataFlowTelemetry.backend.style.color = "#7dd3fc";
+  if (dataFlowTelemetry.backend) dataFlowTelemetry.backend.style.color = "#00ff88";
 
   let animationId = 0;
   let lastTime = performance.now();
@@ -1201,7 +1413,7 @@ function runCpuDataFlow(canvas, pointer) {
   setDataFlowTelemetry("count", particleCount.toLocaleString("en-US"));
   setDataFlowTelemetry("compute", "JS_TYPED_ARRAY");
   setDataFlowTelemetry("state", "ACTIVE_FLOW");
-  if (dataFlowTelemetry.backend) dataFlowTelemetry.backend.style.color = "#9ca3af";
+  if (dataFlowTelemetry.backend) dataFlowTelemetry.backend.style.color = "#9a9a9a";
 
   let animationId = 0;
   let lastTime = performance.now();
@@ -1257,7 +1469,7 @@ function runCpuDataFlow(canvas, pointer) {
 
       const speed = Math.min(1, Math.sqrt(vx * vx + vy * vy) * 0.038);
       ctx.fillStyle =
-        speed > 0.62 ? "rgba(245, 158, 11, 0.72)" : "rgba(125, 211, 252, 0.62)";
+        speed > 0.62 ? "rgba(255, 170, 0, 0.72)" : "rgba(0, 255, 136, 0.62)";
       ctx.fillRect(x, y, 2, 2);
     }
 
@@ -1398,17 +1610,17 @@ function drawLCI() {
     ctx.stroke();
   };
 
-  drawCurve("standard", "#f59e0b");
-  drawCurve("mstack", "#7dd3fc");
+  drawCurve("standard", "#ffaa00");
+  drawCurve("mstack", "#00ff88");
 
   ctx.font = "12px JetBrains Mono, SFMono-Regular, Consolas, monospace";
   ctx.fillStyle = "rgba(229, 231, 235, 0.78)";
   ctx.fillText("u=0.20", plot.left, height - 14);
   ctx.fillText("u=0.96", plot.right - 48, height - 14);
   ctx.fillText("LCI", 10, plot.top + 8);
-  ctx.fillStyle = "#7dd3fc";
+  ctx.fillStyle = "#00ff88";
   ctx.fillText("M-STACK", plot.left + plotWidth * 0.18, toY(modelAt(0.48, "mstack").lci) - 10);
-  ctx.fillStyle = "#f59e0b";
+  ctx.fillStyle = "#ffaa00";
   ctx.fillText("STANDARD", plot.left + plotWidth * 0.58, toY(modelAt(0.62, "standard").lci) - 12);
 
   const mstackFinal = modelAt(0.72, "mstack");
@@ -1478,10 +1690,10 @@ const seedFloorplanBlocks = (width, height) => {
   });
 
   floorplanBlocks = [
-    block("ALU", 100, 90, 80, 80, 100, "#f59e0b", "COMPUTE"),
-    block("L2", 258, 105, 104, 62, 42, "#7dd3fc", "L2_CACHE"),
-    block("MEM", 426, 198, 66, 122, 62, "#9ca3af", "MEM_CTRL"),
-    block("TAP", 58, 270, 48, 44, 12, "#e5e7eb", "DEBUG_TAP")
+    block("ALU", 100, 90, 80, 80, 100, "#ffaa00", "COMPUTE"),
+    block("L2", 258, 105, 104, 62, 42, "#00ff88", "L2_CACHE"),
+    block("MEM", 426, 198, 66, 122, 62, "#9a9a9a", "MEM_CTRL"),
+    block("TAP", 58, 270, 48, 44, 12, "#e0e0e0", "DEBUG_TAP")
   ];
 };
 
@@ -1537,8 +1749,8 @@ function renderFloorplan() {
     const center = getFloorplanCenter(block);
     const radius = block.heat * 1.45 * heatScale;
     const gradient = ctx.createRadialGradient(center.x, center.y, 0, center.x, center.y, radius);
-    gradient.addColorStop(0, `rgba(245, 158, 11, ${Math.min(0.42, block.heat / 260)})`);
-    gradient.addColorStop(1, "rgba(245, 158, 11, 0)");
+    gradient.addColorStop(0, `rgba(255, 170, 0, ${Math.min(0.42, block.heat / 260)})`);
+    gradient.addColorStop(1, "rgba(255, 170, 0, 0)");
     ctx.fillStyle = gradient;
     ctx.beginPath();
     ctx.arc(center.x, center.y, radius, 0, Math.PI * 2);
@@ -1560,7 +1772,7 @@ function renderFloorplan() {
     const distance = Math.abs(start.x - end.x) + Math.abs(start.y - end.y);
     totalWireDistance += distance * route.weight;
 
-    ctx.strokeStyle = route.weight > 2 ? "rgba(125, 211, 252, 0.68)" : "rgba(229, 231, 235, 0.34)";
+    ctx.strokeStyle = route.weight > 2 ? "rgba(0, 255, 136, 0.68)" : "rgba(224, 224, 224, 0.34)";
     ctx.lineWidth = route.weight;
     ctx.beginPath();
     ctx.moveTo(start.x, start.y);
@@ -1609,19 +1821,19 @@ function renderFloorplan() {
 
   if (floorplanTelemetry.wire) {
     floorplanTelemetry.wire.textContent = `${Math.round(wireDelayPs)} ps`;
-    floorplanTelemetry.wire.style.color = wireScore < 45 ? "#ef4444" : "#7dd3fc";
+    floorplanTelemetry.wire.style.color = wireScore < 45 ? "#ff4444" : "#00ff88";
   }
   if (floorplanTelemetry.thermal) {
     floorplanTelemetry.thermal.textContent = `${thermalPenalty.toFixed(1)} W/mm2`;
-    floorplanTelemetry.thermal.style.color = thermalPenalty > 58 ? "#ef4444" : "#f59e0b";
+    floorplanTelemetry.thermal.style.color = thermalPenalty > 58 ? "#ff4444" : "#ffaa00";
   }
   if (floorplanTelemetry.routing) {
     floorplanTelemetry.routing.textContent = critical ? "CONSTRAINT_FAIL" : "TIMING_MET";
-    floorplanTelemetry.routing.style.color = critical ? "#ef4444" : "#9ca3af";
+    floorplanTelemetry.routing.style.color = critical ? "#ff4444" : "#9a9a9a";
   }
   if (floorplanTelemetry.score) {
     floorplanTelemetry.score.textContent = `${Math.max(0, totalScore).toFixed(1)} / 100`;
-    floorplanTelemetry.score.style.color = critical ? "#ef4444" : "#e5e7eb";
+    floorplanTelemetry.score.style.color = critical ? "#ff4444" : "#e0e0e0";
   }
 }
 
@@ -1751,7 +1963,7 @@ const drawDigitalWave = (ctx, label, values, x, y, width, highColor) => {
   const rowHeight = 24;
   const step = width / Math.max(1, values.length || 1);
 
-  ctx.fillStyle = "#6b7280";
+  ctx.fillStyle = "#444444";
   ctx.font = "10px JetBrains Mono, SFMono-Regular, Consolas, monospace";
   ctx.textAlign = "left";
   ctx.textBaseline = "middle";
@@ -1831,8 +2043,8 @@ function renderScan() {
 
   const currentTransitions = TAP_TRANSITIONS[scanState];
   [
-    { next: currentTransitions[0], label: "TMS0", color: "#7dd3fc" },
-    { next: currentTransitions[1], label: "TMS1", color: "#f59e0b" }
+    { next: currentTransitions[0], label: "TMS0", color: "#00ff88" },
+    { next: currentTransitions[1], label: "TMS1", color: "#ffaa00" }
   ].forEach((route, index) => {
     const start = nodeCenters[scanState];
     const end = nodeCenters[route.next];
@@ -1857,12 +2069,12 @@ function renderScan() {
     const x = center.x - nodeWidth * 0.5;
     const y = center.y - nodeHeight * 0.5;
 
-    ctx.fillStyle = active ? "rgba(125, 211, 252, 0.12)" : "#0a0a0a";
+    ctx.fillStyle = active ? "rgba(0, 255, 136, 0.12)" : "#0a0a0a";
     ctx.fillRect(x, y, nodeWidth, nodeHeight);
-    ctx.strokeStyle = active ? "#7dd3fc" : "rgba(255, 255, 255, 0.18)";
+    ctx.strokeStyle = active ? "#00ff88" : "rgba(255, 255, 255, 0.18)";
     ctx.lineWidth = active ? 2 : 1;
     ctx.strokeRect(x + 0.5, y + 0.5, nodeWidth - 1, nodeHeight - 1);
-    ctx.fillStyle = active ? "#e5e7eb" : "#6b7280";
+    ctx.fillStyle = active ? "#e0e0e0" : "#444444";
     ctx.font = "9px JetBrains Mono, SFMono-Regular, Consolas, monospace";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
@@ -1872,18 +2084,18 @@ function renderScan() {
   const registerY = stateHeight + 14;
   const registerX = 64;
   const cellWidth = Math.min(30, (width - registerX - 24) / scanRegister.length);
-  ctx.fillStyle = "#9ca3af";
+  ctx.fillStyle = "#9a9a9a";
   ctx.font = "10px JetBrains Mono, SFMono-Regular, Consolas, monospace";
   ctx.textAlign = "left";
   ctx.fillText("SCAN_CHAIN[15:0]", 18, registerY + 18);
 
   scanRegister.forEach((bit, index) => {
     const x = registerX + index * cellWidth;
-    ctx.fillStyle = bit ? "rgba(125, 211, 252, 0.22)" : "#0a0a0a";
+    ctx.fillStyle = bit ? "rgba(0, 255, 136, 0.22)" : "#0a0a0a";
     ctx.fillRect(x, registerY, cellWidth, 26);
     ctx.strokeStyle = "rgba(255, 255, 255, 0.18)";
     ctx.strokeRect(x + 0.5, registerY + 0.5, cellWidth - 1, 25);
-    ctx.fillStyle = bit ? "#7dd3fc" : "#6b7280";
+    ctx.fillStyle = bit ? "#00ff88" : "#444444";
     ctx.textAlign = "center";
     ctx.fillText(String(bit), x + cellWidth * 0.5, registerY + 17);
   });
@@ -1896,10 +2108,10 @@ function renderScan() {
   const waveX = 70;
   const waveWidth = width - waveX - 24;
   const waveStart = registerY + 58;
-  drawDigitalWave(ctx, "TCK", tckValues, waveX, waveStart, waveWidth, "#e5e7eb");
-  drawDigitalWave(ctx, "TMS", tmsValues, waveX, waveStart + 34, waveWidth, "#f59e0b");
-  drawDigitalWave(ctx, "TDI", tdiValues, waveX, waveStart + 68, waveWidth, "#7dd3fc");
-  drawDigitalWave(ctx, "TDO", tdoValues, waveX, waveStart + 102, waveWidth, "#9ca3af");
+  drawDigitalWave(ctx, "TCK", tckValues, waveX, waveStart, waveWidth, "#e0e0e0");
+  drawDigitalWave(ctx, "TMS", tmsValues, waveX, waveStart + 34, waveWidth, "#ffaa00");
+  drawDigitalWave(ctx, "TDI", tdiValues, waveX, waveStart + 68, waveWidth, "#00ff88");
+  drawDigitalWave(ctx, "TDO", tdoValues, waveX, waveStart + 102, waveWidth, "#9a9a9a");
 
   setScanTelemetry();
 }
@@ -1964,6 +2176,367 @@ const initScan = () => {
 
 initScan();
 
+const FAULT_STAGES = ["fetch", "decode", "execute", "memory", "writeback"];
+const FAULT_STAGE_LABELS = ["FETCH", "DECODE", "EXECUTE", "MEMORY", "WRITEBACK"];
+const FAULT_ROM = [
+  "ADD R1, R2, R3",
+  "LW  R4, 0x10(R5)",
+  "SUB R6, R1, R4",
+  "BEQ R2, R0, +8",
+  "MUL R7, R3, R5",
+  "SW  R7, 0x20(R1)"
+];
+
+let faultPipeline = [null, null, null, null, null];
+let faultPc = 0;
+let faultCycle = 0;
+let faultCompleted = 0;
+let faultInjected = 0;
+let faultFlushes = 0;
+let faultCyclesLost = 0;
+let faultHz = 1;
+let faultRunning = false;
+let faultRaf = 0;
+let faultLastFrame = 0;
+let faultAccumulator = 0;
+let faultSequence = 0;
+let activeFault = null;
+let faultPoison = 0;
+let faultCorruptRegister = "";
+let faultHistoryRows = [];
+const faultCellRecords = new Map();
+
+const FAULT_ANNOTATIONS = {
+  fetch: "// WHAT DFX CATCHES HERE:\n// Scan dump captures PC and fetch register state at cycle N.\n// Invalid opcode is observable before architectural state commits.\n// This is why early capture visibility matters.",
+  decode: "// WHAT DFX CATCHES HERE:\n// Scan dump captures corrupted decode flops and operand selection.\n// IJTAG access can isolate local register-control failure.\n// Coverage turns a silent decode error into a diagnosable state.",
+  execute: "// WHAT DFX CATCHES HERE:\n// BIST would detect ALU output mismatch against expected signature.\n// Poisoned result propagation is caught before it becomes a product escape.\n// This is why arithmetic datapaths need observability.",
+  memory: "// WHAT DFX CATCHES HERE:\n// IEEE 1149.1 JTAG boundary scan detects bus fault behavior.\n// RAM dump and array dump expose address/data corruption.\n// This is why buses and memories get their own debug paths.",
+  writeback: "// WHAT DFX CATCHES HERE:\n// Scan dump captures register-file state at the failing cycle.\n// Architectural state corruption becomes inspectable instead of mystical.\n// This is why scan coverage targets stay above 99%."
+};
+
+const syncFaultCanvas = () => {
+  if (!faultCanvas) return { width: 0, height: 0 };
+  const rect = faultCanvas.getBoundingClientRect();
+  const width = Math.max(420, Math.floor(rect.width || 760));
+  const height = Math.max(300, Math.floor(rect.height || 330));
+
+  if (faultCanvas.width !== width || faultCanvas.height !== height) {
+    faultCanvas.width = width;
+    faultCanvas.height = height;
+  }
+
+  return { width, height };
+};
+
+const recordFaultCell = (instruction, stageIndex, status) => {
+  if (!instruction) return;
+  if (!faultCellRecords.has(instruction.id)) faultCellRecords.set(instruction.id, []);
+  faultCellRecords.get(instruction.id).push({
+    cycle: faultCycle,
+    stage: FAULT_STAGE_LABELS[stageIndex],
+    status
+  });
+
+  if (!faultHistoryRows.includes(instruction.id)) faultHistoryRows.push(instruction.id);
+  if (faultHistoryRows.length > 12) {
+    const removed = faultHistoryRows.shift();
+    faultCellRecords.delete(removed);
+  }
+};
+
+const createFaultInstruction = () => {
+  const text = FAULT_ROM[faultPc % FAULT_ROM.length];
+  const instruction = {
+    id: `I${String(faultSequence).padStart(2, "0")}`,
+    text,
+    pc: faultPc * 4
+  };
+  faultPc = (faultPc + 1) % FAULT_ROM.length;
+  faultSequence += 1;
+  return instruction;
+};
+
+const setStageDisplay = (stageName, instruction, status, labelOverride = "") => {
+  const stageNode = document.querySelector(`.fault-stage[data-stage="${stageName}"]`);
+  const instrNode = document.getElementById(`fault-${stageName}-instr`);
+  const statusNode = document.getElementById(`fault-${stageName}-status`);
+  const state = status.toLowerCase();
+
+  if (stageNode) stageNode.dataset.state = state === "ok" ? "ok" : state;
+  if (instrNode) instrNode.textContent = labelOverride || instruction?.text || "--";
+  if (statusNode) statusNode.textContent = status;
+};
+
+const updateFaultRegisters = () => {
+  if (!faultTelemetry.registers) return;
+  faultTelemetry.registers.replaceChildren();
+
+  for (let index = 0; index < 8; index += 1) {
+    const cell = document.createElement("span");
+    const register = `R${index}`;
+    cell.textContent = faultCorruptRegister === register ? `${register}=0x??` : `${register}=0x${(index * 17).toString(16).padStart(2, "0").toUpperCase()}`;
+    cell.classList.toggle("corrupt", faultCorruptRegister === register);
+    faultTelemetry.registers.appendChild(cell);
+  }
+};
+
+const applyFaultStageDisplay = () => {
+  const overrides = new Map();
+
+  if (activeFault) {
+    const age = activeFault.age;
+    if (activeFault.stage === "fetch") {
+      overrides.set("fetch", { status: age < 2 ? "FAULT" : "STALL", label: "0xDEADBEEF" });
+      if (age >= 2) {
+        ["decode", "execute", "memory", "writeback"].forEach((stage) =>
+          overrides.set(stage, { status: "FLUSHED", label: "FLUSHED" })
+        );
+      }
+    }
+
+    if (activeFault.stage === "decode") {
+      overrides.set("decode", { status: age < 2 ? "FAULT" : "STALL", label: "ADD R??, R??" });
+      ["execute", "memory", "writeback"].forEach((stage) =>
+        overrides.set(stage, { status: age >= 2 ? "FLUSHED" : "FAULT", label: age >= 2 ? "FLUSHED" : "[CORRUPT]" })
+      );
+    }
+
+    if (activeFault.stage === "memory") {
+      overrides.set("memory", { status: activeFault.freeze > 0 ? "STALL" : "FAULT", label: "BUS ERROR: 0xBAD00000" });
+    }
+  }
+
+  if (faultPoison > 0) {
+    overrides.set("execute", { status: "FAULT", label: "0xFF != 0x2A" });
+    overrides.set("memory", { status: "STALL", label: "[POISONED DATA]" });
+    overrides.set("writeback", { status: "STALL", label: "[POISONED DATA]" });
+  }
+
+  if (faultCorruptRegister) {
+    overrides.set("writeback", { status: "FAULT", label: `${faultCorruptRegister} <- 0x??` });
+  }
+
+  FAULT_STAGES.forEach((stage, index) => {
+    const instruction = faultPipeline[index];
+    const override = overrides.get(stage);
+    setStageDisplay(stage, instruction, override?.status || "OK", override?.label || "");
+    recordFaultCell(instruction, index, override?.status || "OK");
+  });
+};
+
+const updateFaultTelemetry = () => {
+  if (faultTelemetry.pc) faultTelemetry.pc.textContent = `0x${(faultPc * 4).toString(16).padStart(4, "0").toUpperCase()}`;
+  if (faultTelemetry.cycle) faultTelemetry.cycle.textContent = String(faultCycle);
+  if (faultTelemetry.count) faultTelemetry.count.textContent = String(faultInjected);
+  if (faultTelemetry.flushes) faultTelemetry.flushes.textContent = String(faultFlushes);
+  if (faultTelemetry.lost) faultTelemetry.lost.textContent = String(faultCyclesLost);
+  if (faultTelemetry.ipc) faultTelemetry.ipc.textContent = (faultCycle ? faultCompleted / faultCycle : 1).toFixed(2);
+  if (faultTelemetry.speedValue) faultTelemetry.speedValue.textContent = `${faultHz.toFixed(1)}HZ`;
+  if (faultTelemetry.clockLabel) faultTelemetry.clockLabel.textContent = `CLOCK: ${faultHz.toFixed(1)}HZ`;
+  updateFaultRegisters();
+};
+
+const flushFaultPipeline = () => {
+  faultPipeline = [null, null, null, null, null];
+  faultFlushes += 1;
+  faultCyclesLost += 3;
+};
+
+const tickFaultPipeline = () => {
+  faultCycle += 1;
+  let freeze = false;
+
+  if (activeFault) {
+    activeFault.age += 1;
+
+    if (activeFault.stage === "fetch" || activeFault.stage === "decode") {
+      if (activeFault.age === 1) {
+        freeze = true;
+        faultCyclesLost += 1;
+      }
+      if (activeFault.age === 2) {
+        flushFaultPipeline();
+      }
+      if (activeFault.age > 4) activeFault = null;
+    }
+
+    if (activeFault?.stage === "memory") {
+      if (activeFault.freeze > 0) {
+        activeFault.freeze -= 1;
+        freeze = true;
+        faultCyclesLost += 1;
+      } else {
+        flushFaultPipeline();
+        activeFault = null;
+      }
+    }
+  }
+
+  if (!freeze) {
+    if (faultPipeline[4]) faultCompleted += 1;
+    faultPipeline.pop();
+    faultPipeline.unshift(createFaultInstruction());
+  }
+
+  if (faultPoison > 0) faultPoison -= 1;
+  applyFaultStageDisplay();
+  updateFaultTelemetry();
+};
+
+function renderFault() {
+  if (!faultCanvas) return;
+  const ctx = faultCanvas.getContext("2d");
+  if (!ctx) return;
+  const { width, height } = syncFaultCanvas();
+  const left = 92;
+  const top = 42;
+  const columns = 12;
+  const rows = Math.max(5, Math.min(8, faultHistoryRows.length || 5));
+  const cellW = (width - left - 24) / columns;
+  const cellH = (height - top - 32) / rows;
+  const cycleStart = Math.max(0, faultCycle - columns + 1);
+  const visibleRows = faultHistoryRows.slice(-rows);
+
+  ctx.fillStyle = "#020202";
+  ctx.fillRect(0, 0, width, height);
+
+  ctx.strokeStyle = "rgba(0, 255, 136, 0.08)";
+  ctx.lineWidth = 1;
+  for (let x = 0; x <= width; x += 24) {
+    ctx.beginPath();
+    ctx.moveTo(x + 0.5, 0);
+    ctx.lineTo(x + 0.5, height);
+    ctx.stroke();
+  }
+  for (let y = 0; y <= height; y += 24) {
+    ctx.beginPath();
+    ctx.moveTo(0, y + 0.5);
+    ctx.lineTo(width, y + 0.5);
+    ctx.stroke();
+  }
+
+  ctx.font = "10px JetBrains Mono, SFMono-Regular, Consolas, monospace";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = "#666666";
+  for (let column = 0; column < columns; column += 1) {
+    ctx.fillText(`C${cycleStart + column}`, left + column * cellW + cellW * 0.5, 18);
+  }
+
+  visibleRows.forEach((rowId, row) => {
+    ctx.textAlign = "left";
+    ctx.fillStyle = "#666666";
+    ctx.fillText(rowId, 16, top + row * cellH + cellH * 0.5);
+
+    const records = faultCellRecords.get(rowId) || [];
+    for (let column = 0; column < columns; column += 1) {
+      const cycle = cycleStart + column;
+      const x = left + column * cellW;
+      const y = top + row * cellH;
+      const record = records.find((item) => item.cycle === cycle);
+      const status = record?.status || "";
+      const stage = record?.stage || "";
+
+      ctx.fillStyle =
+        status === "FAULT"
+          ? "rgba(255, 68, 68, 0.34)"
+          : status === "STALL"
+            ? "rgba(255, 170, 0, 0.24)"
+            : status === "FLUSHED"
+              ? "rgba(68, 68, 68, 0.28)"
+              : record
+                ? "rgba(0, 255, 136, 0.16)"
+                : "rgba(255, 255, 255, 0.02)";
+      ctx.fillRect(x, y, cellW - 2, cellH - 2);
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
+      ctx.strokeRect(x + 0.5, y + 0.5, cellW - 2, cellH - 2);
+
+      if (stage) {
+        ctx.fillStyle = status === "FAULT" ? "#ff4444" : status === "STALL" ? "#ffaa00" : "#00ff88";
+        ctx.textAlign = "center";
+        ctx.fillText(stage.slice(0, 2), x + cellW * 0.5, y + cellH * 0.5);
+      }
+    }
+  });
+}
+
+const faultLoop = (time) => {
+  if (!faultRunning) return;
+  if (!faultLastFrame) faultLastFrame = time;
+  const delta = time - faultLastFrame;
+  faultLastFrame = time;
+
+  if (isFaultVisible()) {
+    faultAccumulator += delta;
+    const interval = 1000 / faultHz;
+    while (faultAccumulator >= interval) {
+      faultAccumulator -= interval;
+      tickFaultPipeline();
+    }
+    renderFault();
+  }
+
+  faultRaf = requestAnimationFrame(faultLoop);
+};
+
+const ensureFaultEngine = () => {
+  if (!faultCanvas || faultRunning) return;
+  faultRunning = true;
+  if (faultPipeline.every((slot) => slot === null)) {
+    faultPipeline = [createFaultInstruction(), null, null, null, null];
+    applyFaultStageDisplay();
+    updateFaultTelemetry();
+  }
+  faultRaf = requestAnimationFrame(faultLoop);
+};
+
+const injectFault = (stage) => {
+  if (!FAULT_STAGES.includes(stage)) return;
+  ensureFaultEngine();
+  faultInjected += 1;
+  faultCorruptRegister = "";
+  activeFault = { stage, age: 0, freeze: stage === "memory" ? 3 : 0 };
+
+  if (stage === "execute") {
+    faultPoison = 4;
+    activeFault = null;
+  }
+
+  if (stage === "writeback") {
+    faultCorruptRegister = "R7";
+    activeFault = null;
+  }
+
+  if (faultTelemetry.annotation) faultTelemetry.annotation.textContent = FAULT_ANNOTATIONS[stage];
+  document.body.classList.add("fault-flash");
+  window.setTimeout(() => document.body.classList.remove("fault-flash"), 90);
+  applyFaultStageDisplay();
+  updateFaultTelemetry();
+  renderFault();
+  trackEvent("feature_interact", { feature: "fault_injection", stage });
+};
+
+const initFaultEngine = () => {
+  if (!faultCanvas) return;
+
+  document.querySelectorAll("[data-fault-stage]").forEach((button) => {
+    button.addEventListener("click", () => injectFault(button.dataset.faultStage || ""));
+  });
+
+  faultTelemetry.speed?.addEventListener("input", () => {
+    faultHz = Number(faultTelemetry.speed.value) || 1;
+    updateFaultTelemetry();
+  });
+
+  window.addEventListener("resize", () => {
+    if (isFaultVisible()) renderFault();
+  });
+
+  updateFaultTelemetry();
+};
+
+initFaultEngine();
+
 const setTelemetry = (key, value) => {
   if (telemetryTargets[key]) telemetryTargets[key].textContent = value;
 };
@@ -2026,7 +2599,7 @@ const renderComputeSignature = (values, size, backend) => {
       const value = Math.abs(values[index] || 0);
       const intensity = Math.min(1, (value % 1.7) / 1.7);
       const alpha = 0.16 + intensity * 0.84;
-      ctx.fillStyle = blueMode ? `rgba(125, 211, 252, ${alpha})` : `rgba(245, 158, 11, ${alpha})`;
+      ctx.fillStyle = blueMode ? `rgba(0, 255, 136, ${alpha})` : `rgba(255, 170, 0, ${alpha})`;
       ctx.fillRect(column * cellWidth, row * cellHeight, Math.max(1, cellWidth - 1), Math.max(1, cellHeight - 1));
     }
   }
@@ -2327,7 +2900,7 @@ const drawLife = () => {
   for (let row = 0; row < LIFE_ROWS; row += 1) {
     for (let column = 0; column < LIFE_COLUMNS; column += 1) {
       if (!lifeCells[lifeIndex(column, row)]) continue;
-      ctx.fillStyle = (column + row + lifeGeneration) % 11 === 0 ? "#f59e0b" : "#7dd3fc";
+      ctx.fillStyle = (column + row + lifeGeneration) % 11 === 0 ? "#ffaa00" : "#00ff88";
       ctx.fillRect(
         Math.floor(column * cellWidth),
         Math.floor(row * cellHeight),

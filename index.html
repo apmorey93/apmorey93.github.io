@@ -221,6 +221,7 @@
               <button class="compute-tab" id="tab-lci" type="button" role="tab" aria-selected="false" aria-controls="lci-panel" data-tab="lci">LCI_MODEL</button>
               <button class="compute-tab" id="tab-floorplan" type="button" role="tab" aria-selected="false" aria-controls="floorplan-panel" data-tab="floorplan">FLOORPLAN_SOLVER</button>
               <button class="compute-tab" id="tab-scan" type="button" role="tab" aria-selected="false" aria-controls="scan-panel" data-tab="scan">SCAN_CHAIN</button>
+              <button class="compute-tab" id="tab-fault" type="button" role="tab" aria-selected="false" aria-controls="fault-panel" data-tab="fault">FAULT_INJECTOR</button>
             </div>
 
             <div class="compute-panel active" id="matrix-panel" role="tabpanel" aria-labelledby="tab-matrix">
@@ -354,6 +355,75 @@
                 </div>
               </div>
             </div>
+
+            <div class="compute-panel" id="fault-panel" role="tabpanel" aria-labelledby="tab-fault" hidden>
+              <div class="compute-header fault-header">
+                <span>[TARGET]: Pipeline Fault Injection Engine</span>
+                <span id="fault-clock-label">CLOCK: 1.0HZ</span>
+              </div>
+              <div class="fault-stage-strip" aria-label="Five stage CPU pipeline">
+                <article class="fault-stage" data-stage="fetch">
+                  <p>FETCH</p>
+                  <strong id="fault-fetch-instr">--</strong>
+                  <span id="fault-fetch-status">OK</span>
+                </article>
+                <article class="fault-stage" data-stage="decode">
+                  <p>DECODE</p>
+                  <strong id="fault-decode-instr">--</strong>
+                  <span id="fault-decode-status">OK</span>
+                </article>
+                <article class="fault-stage" data-stage="execute">
+                  <p>EXECUTE</p>
+                  <strong id="fault-execute-instr">--</strong>
+                  <span id="fault-execute-status">OK</span>
+                </article>
+                <article class="fault-stage" data-stage="memory">
+                  <p>MEMORY</p>
+                  <strong id="fault-memory-instr">--</strong>
+                  <span id="fault-memory-status">OK</span>
+                </article>
+                <article class="fault-stage" data-stage="writeback">
+                  <p>WRITEBACK</p>
+                  <strong id="fault-writeback-instr">--</strong>
+                  <span id="fault-writeback-status">OK</span>
+                </article>
+              </div>
+              <div class="fault-flow" aria-hidden="true">
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <div class="compute-body fault-body">
+                <canvas id="fault-canvas" width="760" height="330" aria-label="Pipeline timing diagram"></canvas>
+                <div class="telemetry-grid fault-telemetry">
+                  <div>PC: <span id="fault-pc">0x0000</span></div>
+                  <div>CYCLE: <span id="fault-cycle">0</span></div>
+                  <div>FAULTS INJECTED: <span id="fault-count">0</span></div>
+                  <div>PIPELINE FLUSHES: <span id="fault-flushes">0</span></div>
+                  <div>CYCLES LOST: <span id="fault-lost">0</span></div>
+                  <div>IPC: <span id="fault-ipc">1.00</span></div>
+                  <div class="fault-note">
+                    <p id="fault-annotation">// WHAT DFX CATCHES HERE: Inject a fault to see observability logic.</p>
+                  </div>
+                  <div class="fault-registers" aria-label="Register file">
+                    <p>REGISTER FILE</p>
+                    <div id="fault-register-grid"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="compute-status fault-controls">
+                <label for="fault-speed">CLOCK RATE <span id="fault-speed-value">1.0HZ</span></label>
+                <input type="range" id="fault-speed" min="0.5" max="5" step="0.5" value="1" />
+                <div class="fault-buttons" aria-label="Fault injection controls">
+                  <button type="button" data-fault-stage="fetch">INJECT FAULT: FETCH</button>
+                  <button type="button" data-fault-stage="decode">INJECT FAULT: DECODE</button>
+                  <button type="button" data-fault-stage="execute">INJECT FAULT: EXECUTE</button>
+                  <button type="button" data-fault-stage="memory">INJECT FAULT: MEMORY</button>
+                  <button type="button" data-fault-stage="writeback">INJECT FAULT: WRITEBACK</button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -380,6 +450,18 @@
 
             <article class="artifact-card reveal-up">
               <div class="artifact-tags">
+                <p class="metadata-tag">[METADATA: GRANTED // USPTO]</p>
+                <p class="metadata-tag">[DOMAIN: MATERIALS INTELLECTUAL PROPERTY]</p>
+              </div>
+              <h3>US Patent: US-12172378-B1</h3>
+              <p>
+                I am listed as a co-inventor on a granted U.S. patent from my materials and manufacturing work. The invention modifies additively manufactured implant surfaces to change roughness, surface energy, and biological interaction.
+              </p>
+              <a class="artifact-link" href="https://patents.google.com/patent/US12172378B1" target="_blank" rel="noopener noreferrer">View on Google Patents [External]</a>
+            </article>
+
+            <article class="artifact-card reveal-up">
+              <div class="artifact-tags">
                 <p class="metadata-tag">[METADATA: ARCHITECTURE // ONGOING]</p>
                 <p class="metadata-tag">[DOMAIN: CONTINUAL LEARNING]</p>
               </div>
@@ -395,6 +477,19 @@
                 <span>COMPILING_FORMULA...</span>
               </div>
               <p>Full architecture documentation available upon technical review.</p>
+            </article>
+
+            <article class="artifact-card reveal-up">
+              <div class="artifact-tags">
+                <p class="metadata-tag">[METADATA: INTERNAL TOOL // DEPLOYED]</p>
+                <p class="metadata-tag">[DOMAIN: GPU-ACCELERATED VERIFICATION]</p>
+              </div>
+              <h3>CuVerif - GPU-Accelerated Digital Logic Simulator</h3>
+              <p>
+                A CUDA-parallel logic simulation engine built for DFX verification workflows. It treats scan pattern simulation and fault coverage analysis as compute problems, not just EDA workflow problems.
+              </p>
+              <p>// Architecture documentation available upon request.</p>
+              <p>// Performance claims stay tied to ground truth before publication.</p>
             </article>
 
             <article class="artifact-card reveal-up">
@@ -452,22 +547,6 @@
               </p>
             </article>
 
-            <article class="artifact-card patent-card reveal-up">
-              <div class="artifact-tags">
-                <p class="metadata-tag">[METADATA: PATENT // US-12172378-B1]</p>
-                <p class="metadata-tag">[DOMAIN: NANOTEXTURED IMPLANTS]</p>
-              </div>
-              <h3>Method and System of Controlling Cell Functions on 3D Printed and 3D Manufactured Materials Modified With Lipases</h3>
-              <p>
-                I am listed as a co-inventor on this granted patent from my materials and manufacturing work. The invention sits at the physical layer: modifying additively manufactured implant surfaces to change roughness, surface energy, and biological interaction. It is a useful trace of where my reliability mindset started before I moved up the stack into silicon validation.
-              </p>
-              <div class="patent-spec">
-                <p>PATENT: <span>US 12,172,378 B1</span></p>
-                <p>ISSUED: <span>DEC 24, 2024</span></p>
-                <p>ASSIGNEE: <span>ZEDA HOLDINGS, INC.</span></p>
-              </div>
-              <a class="artifact-link" href="https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/12172378" target="_blank" rel="noopener noreferrer">Open USPTO Patent PDF [External]</a>
-            </article>
           </div>
         </div>
       </section>
@@ -593,15 +672,21 @@
       </form>
     </dialog>
 
+    <button class="cli-mobile-open" id="cli-mobile-open" type="button" aria-label="Open hidden terminal">[&gt;_]</button>
+
     <div class="cli-overlay" id="cli-overlay" hidden>
       <div class="cli-terminal" role="dialog" aria-modal="true" aria-labelledby="cli-title">
-        <div class="cli-titlebar">
-          <p id="cli-title">[LOCAL_SHELL // ADITYA_MOREY]</p>
+        <div class="cli-titlebar" id="cli-title">
+          <div>
+            <p>AM//DFX SECURE SHELL v2.4.1 - AUTHORIZED ACCESS ONLY</p>
+            <span id="cli-login">Last login: --</span>
+            <span>Hostname: dfx-workstation-01.nvidia.local</span>
+          </div>
           <button type="button" id="cli-close" aria-label="Close local shell">x</button>
         </div>
         <div class="cli-output" id="cli-output" aria-live="polite"></div>
         <form class="cli-form" id="cli-form" autocomplete="off">
-          <label for="cli-input">am@portfolio:~$</label>
+          <label for="cli-input">adi@dfx-ws:~$</label>
           <input id="cli-input" type="text" spellcheck="false" aria-label="Local shell command" />
         </form>
       </div>
