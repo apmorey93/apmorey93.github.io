@@ -663,7 +663,7 @@ svg {
 
 .compute-tabs {
   display: grid;
-  grid-template-columns: repeat(8, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
   border-bottom: 1px solid var(--line);
 }
 
@@ -707,7 +707,8 @@ svg {
 .floorplan-header,
 .scan-header,
 .fault-header,
-.video-header {
+.video-header,
+.engine-header {
   display: flex;
   justify-content: space-between;
   gap: 16px;
@@ -717,7 +718,8 @@ svg {
 .floorplan-header span:last-child,
 .scan-header span:last-child,
 .fault-header span:last-child,
-.video-header span:last-child {
+.video-header span:last-child,
+.engine-header span:last-child {
   color: var(--amber);
 }
 
@@ -733,7 +735,12 @@ svg {
 #lci-canvas,
 #floorplan-canvas,
 #scan-canvas,
-#fault-canvas {
+#fault-canvas,
+#fluid-canvas,
+#silicon-canvas,
+#particle-canvas,
+#react-canvas,
+#chip-canvas {
   width: 100%;
   height: 100%;
   border: 0;
@@ -747,7 +754,12 @@ svg {
 #lci-canvas,
 #floorplan-canvas,
 #scan-canvas,
-#fault-canvas {
+#fault-canvas,
+#fluid-canvas,
+#silicon-canvas,
+#particle-canvas,
+#react-canvas,
+#chip-canvas {
   min-height: 360px;
 }
 
@@ -805,7 +817,8 @@ svg {
 .floorplan-body,
 .scan-body,
 .fault-body,
-.video-body {
+.video-body,
+.engine-body {
   grid-template-columns: minmax(340px, 1fr) minmax(320px, 0.72fr);
 }
 
@@ -813,8 +826,29 @@ svg {
 .floorplan-telemetry,
 .scan-telemetry,
 .fault-telemetry,
-.video-telemetry {
+.video-telemetry,
+.engine-telemetry {
   align-content: stretch;
+}
+
+.engine-body canvas {
+  height: 420px;
+  cursor: crosshair;
+}
+
+.engine-controls {
+  align-items: center;
+}
+
+.engine-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.engine-buttons button {
+  min-width: 96px;
 }
 
 .video-frame {
@@ -1776,6 +1810,11 @@ body.fault-flash::before {
   #floorplan-canvas,
   #scan-canvas,
   #fault-canvas,
+  #fluid-canvas,
+  #silicon-canvas,
+  #particle-canvas,
+  #react-canvas,
+  #chip-canvas,
   .video-frame,
   .artifact-card {
     border-right: 0;
@@ -1787,6 +1826,11 @@ body.fault-flash::before {
   #floorplan-canvas,
   #scan-canvas,
   #fault-canvas,
+  #fluid-canvas,
+  #silicon-canvas,
+  #particle-canvas,
+  #react-canvas,
+  #chip-canvas,
   .video-frame,
   .data-flow-stage {
     border-bottom: 1px solid var(--line);
@@ -1924,6 +1968,11 @@ body.fault-flash::before {
   }
 
   .fault-buttons {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .engine-buttons {
     display: grid;
     grid-template-columns: 1fr;
   }

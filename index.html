@@ -223,6 +223,11 @@
               <button class="compute-tab" id="tab-scan" type="button" role="tab" aria-selected="false" aria-controls="scan-panel" data-tab="scan">SCAN_CHAIN</button>
               <button class="compute-tab" id="tab-fault" type="button" role="tab" aria-selected="false" aria-controls="fault-panel" data-tab="fault">FAULT_INJECTOR</button>
               <button class="compute-tab" id="tab-video" type="button" role="tab" aria-selected="false" aria-controls="video-panel" data-tab="video">VIDEO_SIGNAL</button>
+              <button class="compute-tab" id="tab-fluid" type="button" role="tab" aria-selected="false" aria-controls="fluid-panel" data-tab="fluid">FLUID_METAL</button>
+              <button class="compute-tab" id="tab-silicon" type="button" role="tab" aria-selected="false" aria-controls="silicon-panel" data-tab="silicon">SILICON_SCAPE</button>
+              <button class="compute-tab" id="tab-particles" type="button" role="tab" aria-selected="false" aria-controls="particles-panel" data-tab="particles">PARTICLE_FIELD</button>
+              <button class="compute-tab" id="tab-react" type="button" role="tab" aria-selected="false" aria-controls="react-panel" data-tab="react">REACT_DIFF</button>
+              <button class="compute-tab" id="tab-chip" type="button" role="tab" aria-selected="false" aria-controls="chip-panel" data-tab="chip">CHIP_DIE</button>
             </div>
 
             <div class="compute-panel active" id="matrix-panel" role="tabpanel" aria-labelledby="tab-matrix">
@@ -451,6 +456,106 @@
               <div class="compute-status">
                 <span>TRANSPORT: <strong>IFRAME // NOCOOKIES DOMAIN</strong></span>
                 <a class="compute-link" href="https://www.youtube.com/watch?v=Y97Ke07R7wc" target="_blank" rel="noopener noreferrer">OPEN_SOURCE_VIDEO</a>
+              </div>
+            </div>
+
+            <div class="compute-panel" id="fluid-panel" role="tabpanel" aria-labelledby="tab-fluid" hidden>
+              <div class="compute-header engine-header">
+                <span>[TARGET]: Fluid Metal Simulation</span>
+                <span id="fluid-fps">FPS: --</span>
+              </div>
+              <div class="compute-body engine-body">
+                <canvas id="fluid-canvas" width="760" height="420" aria-label="Liquid metal fluid simulation"></canvas>
+                <div class="telemetry-grid engine-telemetry">
+                  <div>SOLVER: <span>NAVIER-STOKES VISUAL</span></div>
+                  <div>GRID: <span>512 x 512</span></div>
+                  <div>JACOBI: <span>32 ITERATIONS / FRAME</span></div>
+                  <div>VISCOSITY: <span>0.0001</span></div>
+                  <div>VORTICITY: <span>0.3</span></div>
+                  <div>INPUT: <span>DRAG_TO_SPLAT</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="compute-panel" id="silicon-panel" role="tabpanel" aria-labelledby="tab-silicon" hidden>
+              <div class="compute-header engine-header">
+                <span>[TARGET]: Infinite Silicon Landscape</span>
+                <span id="silicon-fps">FPS: --</span>
+              </div>
+              <div class="compute-body engine-body">
+                <canvas id="silicon-canvas" width="760" height="420" aria-label="Raymarched silicon landscape"></canvas>
+                <div class="telemetry-grid engine-telemetry">
+                  <div>RENDERER: <span>WEBGL RAYMARCHER</span></div>
+                  <div>GEOMETRY: <span>ZERO // SDF FIELD</span></div>
+                  <div>STEPS: <span id="silicon-steps">128 / RAY</span></div>
+                  <div>FEATURES: <span>SDF UNION // FBM // ACES</span></div>
+                  <div>INPUT: <span>MOUSE_LOOK</span></div>
+                  <div>STATE: <span id="silicon-state">LAZY_INIT</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="compute-panel" id="particles-panel" role="tabpanel" aria-labelledby="tab-particles" hidden>
+              <div class="compute-header engine-header">
+                <span>[TARGET]: Gravitational Particle Field</span>
+                <span id="particle-fps">FPS: --</span>
+              </div>
+              <div class="compute-body engine-body">
+                <canvas id="particle-canvas" width="760" height="420" aria-label="Additive gravitational particle field"></canvas>
+                <div class="telemetry-grid engine-telemetry">
+                  <div>TARGET: <span>GRAVITATIONAL N-BODY</span></div>
+                  <div>REQUESTED: <span>10,000,000</span></div>
+                  <div>ACTIVE: <span id="particle-active">--</span></div>
+                  <div>COMPUTE: <span>CLIENT GOVERNED</span></div>
+                  <div>BLEND: <span>ADDITIVE FIELD</span></div>
+                  <div>INPUT: <span>MOUSE_GRAVITY</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="compute-panel" id="react-panel" role="tabpanel" aria-labelledby="tab-react" hidden>
+              <div class="compute-header engine-header">
+                <span>[TARGET]: Gray-Scott Reaction-Diffusion</span>
+                <span id="react-fps">FPS: --</span>
+              </div>
+              <div class="compute-body engine-body">
+                <canvas id="react-canvas" width="760" height="420" aria-label="Reaction diffusion semiconductor substrate"></canvas>
+                <div class="telemetry-grid engine-telemetry">
+                  <div>GRID: <span>160 x 112</span></div>
+                  <div>SUBSTEPS: <span>4 / FRAME</span></div>
+                  <div>F / K: <span id="react-fk">0.039 / 0.058</span></div>
+                  <div>PATTERN: <span id="react-pattern">CIRCUIT</span></div>
+                  <div>ITERATION: <span id="react-iteration">0</span></div>
+                  <div>INPUT: <span>CLICK_TO_SEED</span></div>
+                </div>
+              </div>
+              <div class="compute-status engine-controls">
+                <span>PRESETS: <strong>THIN-FILM SUBSTRATE COLORING</strong></span>
+                <div class="engine-buttons" aria-label="Reaction diffusion presets">
+                  <button type="button" data-react-preset="dendrite">DENDRITE</button>
+                  <button type="button" data-react-preset="circuit">CIRCUIT</button>
+                  <button type="button" data-react-preset="coral">CORAL</button>
+                  <button type="button" data-react-preset="chaos">CHAOS</button>
+                  <button type="button" id="react-reset">RESET</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="compute-panel" id="chip-panel" role="tabpanel" aria-labelledby="tab-chip" hidden>
+              <div class="compute-header engine-header">
+                <span>[TARGET]: Holographic Silicon Die Render</span>
+                <span id="chip-fps">FPS: --</span>
+              </div>
+              <div class="compute-body engine-body">
+                <canvas id="chip-canvas" width="760" height="420" aria-label="Holographic chip die diffraction shader"></canvas>
+                <div class="telemetry-grid engine-telemetry">
+                  <div>RENDERER: <span>WEBGL // CUSTOM GLSL</span></div>
+                  <div>SHADER: <span>DIFFRACTION GRATING</span></div>
+                  <div>GEOMETRY: <span>PROCEDURAL DIE</span></div>
+                  <div>LAYERS: <span>POLY // METAL // PASSIVATION</span></div>
+                  <div>INPUT: <span>MOVE_CURSOR_TO_TILT</span></div>
+                  <div>STATE: <span id="chip-state">LAZY_INIT</span></div>
+                </div>
               </div>
             </div>
           </div>

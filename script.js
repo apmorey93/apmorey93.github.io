@@ -905,6 +905,11 @@ const lciCanvas = $("#lci-canvas");
 const floorplanCanvas = $("#floorplan-canvas");
 const scanCanvas = $("#scan-canvas");
 const faultCanvas = $("#fault-canvas");
+const fluidCanvas = $("#fluid-canvas");
+const siliconCanvas = $("#silicon-canvas");
+const particleCanvas = $("#particle-canvas");
+const reactCanvas = $("#react-canvas");
+const chipCanvas = $("#chip-canvas");
 const dataFlowTelemetry = {
   backend: $("#df-backend"),
   count: $("#df-count"),
@@ -951,6 +956,21 @@ const faultTelemetry = {
   clockLabel: $("#fault-clock-label"),
   registers: $("#fault-register-grid")
 };
+const engineTelemetry = {
+  fluidFps: $("#fluid-fps"),
+  siliconFps: $("#silicon-fps"),
+  siliconSteps: $("#silicon-steps"),
+  siliconState: $("#silicon-state"),
+  particleFps: $("#particle-fps"),
+  particleActive: $("#particle-active"),
+  reactFps: $("#react-fps"),
+  reactFk: $("#react-fk"),
+  reactPattern: $("#react-pattern"),
+  reactIteration: $("#react-iteration"),
+  reactReset: $("#react-reset"),
+  chipFps: $("#chip-fps"),
+  chipState: $("#chip-state")
+};
 const lifeControls = {
   state: $("#life-state"),
   generation: $("#life-generation"),
@@ -970,6 +990,13 @@ const LIFE_COLUMNS = 80;
 const LIFE_ROWS = 48;
 let dataFlowStarted = false;
 let dataFlowStop = null;
+const lazyEngines = {
+  fluid: false,
+  silicon: false,
+  particles: false,
+  react: false,
+  chip: false
+};
 
 const setActiveComputeTab = (tabName) => {
   computeTabs.forEach((tab) => {
@@ -1008,6 +1035,12 @@ const setActiveComputeTab = (tabName) => {
     ensureFaultEngine();
     requestAnimationFrame(renderFault);
   }
+
+  if (tabName === "fluid") ensureFluidMetal();
+  if (tabName === "silicon") ensureSiliconScape();
+  if (tabName === "particles") ensureParticleField();
+  if (tabName === "react") ensureReactionDiffusion();
+  if (tabName === "chip") ensureChipDie();
 };
 
 computeTabs.forEach((tab) => {
@@ -1040,6 +1073,11 @@ const isScanVisible = () => {
 
 const isFaultVisible = () => {
   const panel = $("#fault-panel");
+  return Boolean(panel && !panel.hidden);
+};
+
+const isEngineVisible = (name) => {
+  const panel = document.getElementById(`${name}-panel`);
   return Boolean(panel && !panel.hidden);
 };
 
@@ -2550,6 +2588,545 @@ const initFaultEngine = () => {
 };
 
 initFaultEngine();
+
+const syncEngineCanvas = (canvas, scaleLimit = 2) => {
+  const rect = canvas.getBoundingClientRect();
+  const dpr = Math.min(window.devicePixelRatio || 1, scaleLimit);
+  const width = Math.max(320, Math.floor(rect.width || 760));
+  const height = Math.max(260, Math.floor(rect.height || 420));
+  const pixelWidth = Math.floor(width * dpr);
+  const pixelHeight = Math.floor(height * dpr);
+
+  if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
+    canvas.width = pixelWidth;
+    canvas.height = pixelHeight;
+  }
+
+  return { width, height, dpr };
+};
+
+const createFpsMeter = (target) => {
+  let frames = 0;
+  let last = performance.now();
+  return (time) => {
+    frames += 1;
+    if (time - last < 500) return;
+    if (target) target.textContent = `FPS: ${Math.round((frames * 1000) / (time - last))}`;
+    frames = 0;
+    last = time;
+  };
+};
+
+const compileProgram = (gl, vertexSource, fragmentSource) => {
+  const compile = (type, source) => {
+    const shader = gl.createShader(type);
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+      throw new Error(gl.getShaderInfoLog(shader) || "shader compile failed");
+    }
+    return shader;
+  };
+
+  const program = gl.createProgram();
+  gl.attachShader(program, compile(gl.VERTEX_SHADER, vertexSource));
+  gl.attachShader(program, compile(gl.FRAGMENT_SHADER, fragmentSource));
+  gl.linkProgram(program);
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+    throw new Error(gl.getProgramInfoLog(program) || "program link failed");
+  }
+  return program;
+};
+
+function ensureFluidMetal() {
+  if (lazyEngines.fluid || !fluidCanvas) return;
+  lazyEngines.fluid = true;
+  const ctx = fluidCanvas.getContext("2d");
+  if (!ctx) return;
+
+  const particleCount = window.innerWidth < 760 ? 1800 : 4200;
+  const particles = Array.from({ length: particleCount }, (_, index) => {
+    const t = index / particleCount;
+    const angle = t * Math.PI * 12;
+    const radius = 0.08 + t * 0.42;
+    return {
+      x: 0.5 + Math.cos(angle) * radius,
+      y: 0.5 + Math.sin(angle) * radius,
+      vx: -Math.sin(angle) * 0.0018,
+      vy: Math.cos(angle) * 0.0018
+    };
+  });
+  const pointer = { x: 0.5, y: 0.5, px: 0.5, py: 0.5, active: false };
+  const fps = createFpsMeter(engineTelemetry.fluidFps);
+
+  fluidCanvas.addEventListener("pointerdown", (event) => {
+    const rect = fluidCanvas.getBoundingClientRect();
+    pointer.x = (event.clientX - rect.left) / rect.width;
+    pointer.y = (event.clientY - rect.top) / rect.height;
+    pointer.px = pointer.x;
+    pointer.py = pointer.y;
+    pointer.active = true;
+    fluidCanvas.setPointerCapture(event.pointerId);
+  });
+
+  fluidCanvas.addEventListener("pointermove", (event) => {
+    const rect = fluidCanvas.getBoundingClientRect();
+    pointer.px = pointer.x;
+    pointer.py = pointer.y;
+    pointer.x = (event.clientX - rect.left) / rect.width;
+    pointer.y = (event.clientY - rect.top) / rect.height;
+    pointer.active = event.buttons > 0;
+  });
+
+  fluidCanvas.addEventListener("pointerup", (event) => {
+    pointer.active = false;
+    if (fluidCanvas.hasPointerCapture(event.pointerId)) fluidCanvas.releasePointerCapture(event.pointerId);
+  });
+
+  const frame = (time) => {
+    requestAnimationFrame(frame);
+    if (!isEngineVisible("fluid")) return;
+    fps(time);
+    const { width, height, dpr } = syncEngineCanvas(fluidCanvas, 2);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.fillStyle = "rgba(2, 2, 2, 0.24)";
+    ctx.fillRect(0, 0, width, height);
+    ctx.globalCompositeOperation = "lighter";
+
+    const dx = pointer.x - pointer.px;
+    const dy = pointer.y - pointer.py;
+    particles.forEach((particle, index) => {
+      const cx = particle.x - 0.5;
+      const cy = particle.y - 0.5;
+      const curl = Math.sin(time * 0.00035 + index * 0.013) * 0.00008;
+      particle.vx += -cy * 0.00006 + curl;
+      particle.vy += cx * 0.00006 - curl;
+
+      if (pointer.active) {
+        const px = particle.x - pointer.x;
+        const py = particle.y - pointer.y;
+        const dist = Math.max(0.002, px * px + py * py);
+        const force = Math.min(0.018, 0.000025 / dist);
+        particle.vx += dx * force * 34 - px * force * 0.12;
+        particle.vy += dy * force * 34 - py * force * 0.12;
+      }
+
+      particle.vx *= 0.992;
+      particle.vy *= 0.992;
+      particle.x += particle.vx;
+      particle.y += particle.vy;
+      if (particle.x < 0) particle.x += 1;
+      if (particle.x > 1) particle.x -= 1;
+      if (particle.y < 0) particle.y += 1;
+      if (particle.y > 1) particle.y -= 1;
+
+      const speed = Math.min(1, Math.hypot(particle.vx, particle.vy) * 260);
+      ctx.fillStyle = speed > 0.55 ? "rgba(235, 238, 242, 0.18)" : "rgba(118, 185, 0, 0.1)";
+      ctx.fillRect(particle.x * width, particle.y * height, 1.4, 1.4);
+    });
+
+    ctx.globalCompositeOperation = "source-over";
+  };
+
+  requestAnimationFrame(frame);
+}
+
+function ensureSiliconScape() {
+  if (lazyEngines.silicon || !siliconCanvas) return;
+  lazyEngines.silicon = true;
+  const gl = siliconCanvas.getContext("webgl", { antialias: false, alpha: false });
+  if (!gl) {
+    if (engineTelemetry.siliconState) engineTelemetry.siliconState.textContent = "WEBGL_UNAVAILABLE";
+    return;
+  }
+
+  const vertex = `attribute vec2 position; varying vec2 vUv; void main(){ vUv=position*0.5+0.5; gl_Position=vec4(position,0.0,1.0); }`;
+  const fragment = `
+precision highp float;
+varying vec2 vUv;
+uniform float time;
+uniform vec2 resolution;
+uniform vec2 mouse;
+float hash(vec3 p){ return fract(sin(dot(p,vec3(127.1,311.7,74.7)))*43758.5453); }
+float box(vec3 p, vec3 b){ vec3 q=abs(p)-b; return length(max(q,0.0))+min(max(q.x,max(q.y,q.z)),0.0); }
+float scene(vec3 p){
+  float ground=p.y+0.08*sin(p.x*5.0+time*0.2)*sin(p.z*4.0);
+  vec3 q=p; q.x=mod(q.x,0.45)-0.225; q.z=mod(q.z,0.62)-0.31;
+  float h=0.18+0.36*hash(floor(p*2.1));
+  float gate=box(q-vec3(0.0,h*0.5,0.0),vec3(0.065,h,0.09));
+  float layer1=max(abs(p.y-0.42)-0.012,-(abs(mod(p.x,0.22)-0.11)-0.032));
+  float layer2=max(abs(p.y-0.78)-0.012,-(abs(mod(p.z,0.28)-0.14)-0.034));
+  return min(min(ground,gate),min(layer1,layer2));
+}
+vec3 normal(vec3 p){ float e=0.002; return normalize(vec3(scene(p+vec3(e,0,0))-scene(p-vec3(e,0,0)),scene(p+vec3(0,e,0))-scene(p-vec3(0,e,0)),scene(p+vec3(0,0,e))-scene(p-vec3(0,0,e)))); }
+void main(){
+  vec2 uv=(gl_FragCoord.xy-resolution*0.5)/resolution.y;
+  vec3 ro=vec3((mouse.x-0.5)*0.45,0.65+sin(time*0.12)*0.08,time*0.34);
+  vec3 ta=ro+vec3((mouse.x-0.5)*0.3,-0.22,1.0);
+  vec3 ww=normalize(ta-ro), uu=normalize(cross(vec3(0,1,0),ww)), vv=cross(ww,uu);
+  vec3 rd=normalize(uv.x*uu+uv.y*vv+1.45*ww);
+  float t=0.0; float hit=0.0;
+  for(int i=0;i<96;i++){ vec3 p=ro+rd*t; float d=scene(p); if(d<0.001){hit=1.0; break;} t+=d*0.72; if(t>32.0) break; }
+  vec3 color=vec3(0.004,0.006,0.012);
+  if(hit>0.5){
+    vec3 p=ro+rd*t; vec3 n=normal(p);
+    vec3 light=normalize(vec3(-0.35,0.9,0.45));
+    float diff=max(dot(n,light),0.0);
+    float spec=pow(max(dot(reflect(-light,n),-rd),0.0),48.0);
+    float thin=fract(p.y*4.0+sin(p.x*7.0+p.z*3.0)*0.08);
+    vec3 film=0.5+0.5*cos(6.28318*(thin+vec3(0.0,0.33,0.67)));
+    vec3 base=mix(vec3(0.03,0.05,0.08),vec3(0.5,0.55,0.62),clamp(p.y,0.0,1.0));
+    color=base*(0.12+diff*0.9)+film*0.12+spec*vec3(0.9,0.95,1.0);
+    color=mix(color,vec3(0.01,0.014,0.025),1.0-exp(-t*0.045));
+  } else {
+    float star=step(0.9985,hash(vec3(floor(rd.xz*120.0),1.0)));
+    color+=star*0.6;
+  }
+  color=color*(2.51*color+0.03)/(color*(2.43*color+0.59)+0.14);
+  color=pow(clamp(color,0.0,1.0),vec3(0.4545));
+  color*=0.97+0.03*sin(gl_FragCoord.y*3.14159);
+  gl_FragColor=vec4(color,1.0);
+}`;
+  let program;
+  try {
+    program = compileProgram(gl, vertex, fragment);
+  } catch (error) {
+    console.warn(error);
+    if (engineTelemetry.siliconState) engineTelemetry.siliconState.textContent = "SHADER_FAULT";
+    return;
+  }
+  const buffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+  const position = gl.getAttribLocation(program, "position");
+  const uniforms = {
+    time: gl.getUniformLocation(program, "time"),
+    resolution: gl.getUniformLocation(program, "resolution"),
+    mouse: gl.getUniformLocation(program, "mouse")
+  };
+  const mouse = { x: 0.5, y: 0.5 };
+  const fps = createFpsMeter(engineTelemetry.siliconFps);
+  siliconCanvas.addEventListener("pointermove", (event) => {
+    const rect = siliconCanvas.getBoundingClientRect();
+    mouse.x = (event.clientX - rect.left) / rect.width;
+    mouse.y = (event.clientY - rect.top) / rect.height;
+  });
+  if (engineTelemetry.siliconState) engineTelemetry.siliconState.textContent = "WEBGL_ACTIVE";
+
+  const frame = (time) => {
+    requestAnimationFrame(frame);
+    if (!isEngineVisible("silicon")) return;
+    fps(time);
+    const rect = siliconCanvas.getBoundingClientRect();
+    const scale = window.innerWidth < 760 ? 0.5 : 0.62;
+    const width = Math.max(320, Math.floor(rect.width * scale));
+    const height = Math.max(220, Math.floor(rect.height * scale));
+    if (siliconCanvas.width !== width || siliconCanvas.height !== height) {
+      siliconCanvas.width = width;
+      siliconCanvas.height = height;
+    }
+    gl.viewport(0, 0, width, height);
+    gl.useProgram(program);
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.enableVertexAttribArray(position);
+    gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
+    gl.uniform1f(uniforms.time, time * 0.001);
+    gl.uniform2f(uniforms.resolution, width, height);
+    gl.uniform2f(uniforms.mouse, mouse.x, mouse.y);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  };
+  requestAnimationFrame(frame);
+}
+
+function ensureParticleField() {
+  if (lazyEngines.particles || !particleCanvas) return;
+  lazyEngines.particles = true;
+  const ctx = particleCanvas.getContext("2d");
+  if (!ctx) return;
+  const count = window.innerWidth < 760 ? 18000 : 65000;
+  if (engineTelemetry.particleActive) engineTelemetry.particleActive.textContent = count.toLocaleString("en-US");
+  const particles = new Float32Array(count * 4);
+  for (let i = 0; i < count; i += 1) {
+    const arm = Math.floor(Math.random() * 3);
+    const t = Math.random();
+    const angle = arm * ((Math.PI * 2) / 3) + t * Math.PI * 4 + (Math.random() - 0.5) * 0.28;
+    const radius = t * 0.82 + Math.random() * 0.04;
+    const speed = Math.sqrt(0.00045 / (radius + 0.02));
+    particles[i * 4] = Math.cos(angle) * radius;
+    particles[i * 4 + 1] = Math.sin(angle) * radius;
+    particles[i * 4 + 2] = -Math.sin(angle) * speed;
+    particles[i * 4 + 3] = Math.cos(angle) * speed;
+  }
+  const mouse = { x: 0, y: 0, active: false };
+  const fps = createFpsMeter(engineTelemetry.particleFps);
+  particleCanvas.addEventListener("pointermove", (event) => {
+    const rect = particleCanvas.getBoundingClientRect();
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = ((event.clientY - rect.top) / rect.height) * 2 - 1;
+    mouse.active = true;
+  });
+  particleCanvas.addEventListener("pointerleave", () => {
+    mouse.active = false;
+  });
+
+  const frame = (time) => {
+    requestAnimationFrame(frame);
+    if (!isEngineVisible("particles")) return;
+    fps(time);
+    const { width, height, dpr } = syncEngineCanvas(particleCanvas, 1.5);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.fillStyle = "rgba(1, 1, 2, 0.28)";
+    ctx.fillRect(0, 0, width, height);
+    ctx.globalCompositeOperation = "lighter";
+    const aspect = width / height;
+    for (let i = 0; i < count; i += 1) {
+      const base = i * 4;
+      let x = particles[base];
+      let y = particles[base + 1];
+      let vx = particles[base + 2];
+      let vy = particles[base + 3];
+      const d2 = Math.max(0.006, x * x + y * y);
+      const inv = 1 / Math.sqrt(d2);
+      vx += -x * inv * 0.00022 / d2;
+      vy += -y * inv * 0.00022 / d2;
+      if (mouse.active) {
+        const mx = mouse.x * aspect - x;
+        const my = -mouse.y - y;
+        const md2 = Math.max(0.01, mx * mx + my * my);
+        vx += mx * 0.000018 / md2;
+        vy += my * 0.000018 / md2;
+      }
+      vx *= 0.9993;
+      vy *= 0.9993;
+      x += vx * 0.9;
+      y += vy * 0.9;
+      if (x < -1.2) x = 1.2;
+      if (x > 1.2) x = -1.2;
+      if (y < -1.1) y = 1.1;
+      if (y > 1.1) y = -1.1;
+      particles[base] = x;
+      particles[base + 1] = y;
+      particles[base + 2] = vx;
+      particles[base + 3] = vy;
+      const speed = Math.min(1, Math.hypot(vx, vy) * 160);
+      ctx.fillStyle = speed > 0.45 ? "rgba(255, 170, 0, 0.055)" : "rgba(118, 185, 0, 0.035)";
+      ctx.fillRect((x / aspect + 1) * 0.5 * width, (1 - (y + 1) * 0.5) * height, 1.1, 1.1);
+    }
+    ctx.globalCompositeOperation = "source-over";
+  };
+  requestAnimationFrame(frame);
+}
+
+function ensureReactionDiffusion() {
+  if (lazyEngines.react || !reactCanvas) return;
+  lazyEngines.react = true;
+  const ctx = reactCanvas.getContext("2d");
+  if (!ctx) return;
+  const gridW = 160;
+  const gridH = 112;
+  const substeps = 4;
+  let u = new Float32Array(gridW * gridH);
+  let v = new Float32Array(gridW * gridH);
+  let nextU = new Float32Array(gridW * gridH);
+  let nextV = new Float32Array(gridW * gridH);
+  let feed = 0.039;
+  let kill = 0.058;
+  let preset = "CIRCUIT";
+  let iteration = 0;
+  const bufferCanvas = document.createElement("canvas");
+  bufferCanvas.width = gridW;
+  bufferCanvas.height = gridH;
+  const bufferCtx = bufferCanvas.getContext("2d");
+  const image = bufferCtx ? bufferCtx.createImageData(gridW, gridH) : null;
+  const fps = createFpsMeter(engineTelemetry.reactFps);
+  const index = (x, y) => ((y + gridH) % gridH) * gridW + ((x + gridW) % gridW);
+
+  const seed = (cx = gridW * 0.5, cy = gridH * 0.5, radius = 10) => {
+    u.fill(1);
+    v.fill(0);
+    for (let y = Math.floor(cy - radius); y <= cy + radius; y += 1) {
+      for (let x = Math.floor(cx - radius); x <= cx + radius; x += 1) {
+        const dist = Math.hypot(x - cx, y - cy);
+        if (dist > radius) continue;
+        const i = index(x, y);
+        u[i] = 0.5;
+        v[i] = 0.25;
+      }
+    }
+    iteration = 0;
+  };
+  seed();
+
+  const setPreset = (name) => {
+    const presets = {
+      dendrite: [0.037, 0.06, "DENDRITE"],
+      circuit: [0.039, 0.058, "CIRCUIT"],
+      coral: [0.025, 0.055, "CORAL"],
+      chaos: [0.026, 0.051, "CHAOS"]
+    };
+    [feed, kill, preset] = presets[name] || presets.circuit;
+    if (engineTelemetry.reactFk) engineTelemetry.reactFk.textContent = `${feed.toFixed(3)} / ${kill.toFixed(3)}`;
+    if (engineTelemetry.reactPattern) engineTelemetry.reactPattern.textContent = preset;
+    seed();
+  };
+  document.querySelectorAll("[data-react-preset]").forEach((button) => {
+    button.addEventListener("click", () => setPreset(button.dataset.reactPreset || "circuit"));
+  });
+  engineTelemetry.reactReset?.addEventListener("click", () => seed());
+  reactCanvas.addEventListener("pointerdown", (event) => {
+    const rect = reactCanvas.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width) * gridW;
+    const y = ((event.clientY - rect.top) / rect.height) * gridH;
+    for (let sy = -8; sy <= 8; sy += 1) {
+      for (let sx = -8; sx <= 8; sx += 1) {
+        if (sx * sx + sy * sy > 64) continue;
+        const i = index(Math.floor(x + sx), Math.floor(y + sy));
+        u[i] = 0.5;
+        v[i] = 0.25;
+      }
+    }
+  });
+
+  const step = () => {
+    for (let y = 0; y < gridH; y += 1) {
+      const row = y * gridW;
+      const upRow = (y === 0 ? gridH - 1 : y - 1) * gridW;
+      const downRow = (y === gridH - 1 ? 0 : y + 1) * gridW;
+      for (let x = 0; x < gridW; x += 1) {
+        const i = row + x;
+        const left = row + (x === 0 ? gridW - 1 : x - 1);
+        const right = row + (x === gridW - 1 ? 0 : x + 1);
+        const up = upRow + x;
+        const down = downRow + x;
+        const centerU = u[i];
+        const centerV = v[i];
+        const lapU = u[left] + u[right] + u[up] + u[down] - 4 * centerU;
+        const lapV = v[left] + v[right] + v[up] + v[down] - 4 * centerV;
+        const reaction = centerU * centerV * centerV;
+        let nextCenterU = centerU + (0.16 * lapU - reaction + feed * (1 - centerU));
+        let nextCenterV = centerV + (0.08 * lapV + reaction - (feed + kill) * centerV);
+        if (nextCenterU < 0) nextCenterU = 0;
+        if (nextCenterU > 1) nextCenterU = 1;
+        if (nextCenterV < 0) nextCenterV = 0;
+        if (nextCenterV > 1) nextCenterV = 1;
+        nextU[i] = nextCenterU;
+        nextV[i] = nextCenterV;
+      }
+    }
+    [u, nextU] = [nextU, u];
+    [v, nextV] = [nextV, v];
+    iteration += 1;
+  };
+
+  const frame = (time) => {
+    requestAnimationFrame(frame);
+    if (!isEngineVisible("react")) return;
+    fps(time);
+    if (!bufferCtx || !image) return;
+    for (let i = 0; i < substeps; i += 1) step();
+    const { width, height, dpr } = syncEngineCanvas(reactCanvas, 1);
+    for (let i = 0; i < gridW * gridH; i += 1) {
+      const phase = v[i] * Math.PI * 6;
+      const edge = Math.min(1, Math.abs(v[i] - u[i]) * 2.6);
+      image.data[i * 4] = Math.floor((18 + 170 * Math.max(0, Math.cos(phase))) * edge);
+      image.data[i * 4 + 1] = Math.floor((22 + 160 * Math.max(0, Math.cos(phase + 2.1))) * edge + 22);
+      image.data[i * 4 + 2] = Math.floor((36 + 190 * Math.max(0, Math.cos(phase + 4.18))) * edge + 30);
+      image.data[i * 4 + 3] = 255;
+    }
+    bufferCtx.putImageData(image, 0, 0);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(bufferCanvas, 0, 0, width, height);
+    if (engineTelemetry.reactIteration) engineTelemetry.reactIteration.textContent = String(iteration);
+  };
+  requestAnimationFrame(frame);
+}
+
+function ensureChipDie() {
+  if (lazyEngines.chip || !chipCanvas) return;
+  lazyEngines.chip = true;
+  const gl = chipCanvas.getContext("webgl", { antialias: false, alpha: false });
+  if (!gl) {
+    if (engineTelemetry.chipState) engineTelemetry.chipState.textContent = "WEBGL_UNAVAILABLE";
+    return;
+  }
+  const vertex = `attribute vec2 position; varying vec2 vUv; void main(){vUv=position*0.5+0.5; gl_Position=vec4(position,0.0,1.0);}`;
+  const fragment = `
+precision highp float;
+varying vec2 vUv;
+uniform float time;
+uniform vec2 mouse;
+float line(float v,float w){return smoothstep(w,0.0,abs(fract(v)-0.5));}
+void main(){
+  vec2 uv=vUv*2.0-1.0;
+  float tiltX=(mouse.x-0.5)*0.28;
+  float tiltY=(mouse.y-0.5)*0.18;
+  uv.x+=uv.y*tiltX;
+  uv.y+=uv.x*tiltY;
+  vec2 die=abs(uv);
+  float inside=step(max(die.x,die.y),0.78);
+  float bevel=smoothstep(0.82,0.76,max(die.x,die.y));
+  float circuit=max(line(vUv.x*18.0,0.035),line(vUv.y*14.0,0.032))*0.22;
+  vec2 block=floor(vUv*9.0);
+  float h=fract(sin(dot(block,vec2(127.1,311.7)))*43758.5);
+  float grating=vUv.x*760.0+vUv.y*230.0+time*0.35+(mouse.x-0.5)*4.0;
+  vec3 diffraction=0.5+0.5*cos(grating*vec3(1.0,1.31,1.79)+vec3(0.0,2.1,4.2));
+  float fresnel=pow(max(die.x,die.y),3.0);
+  vec3 base=mix(vec3(0.025,0.03,0.045),vec3(0.12,0.15,0.2),h*0.55+circuit);
+  vec3 color=base+diffraction*(0.18+fresnel*0.55)+vec3(1.0)*pow(max(0.0,1.0-length(uv-vec2(-0.25,0.38))*1.7),16.0)*0.45;
+  float edge=max(step(0.72,die.x),step(0.72,die.y));
+  float pads=edge*step(0.55,fract((die.x+die.y)*28.0));
+  color=mix(color,vec3(0.85,0.68,0.18),pads*inside);
+  color*=inside*bevel;
+  color+=vec3(0.01,0.012,0.016)*(1.0-inside);
+  gl_FragColor=vec4(color,1.0);
+}`;
+  let program;
+  try {
+    program = compileProgram(gl, vertex, fragment);
+  } catch (error) {
+    console.warn(error);
+    if (engineTelemetry.chipState) engineTelemetry.chipState.textContent = "SHADER_FAULT";
+    return;
+  }
+  const buffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+  const position = gl.getAttribLocation(program, "position");
+  const uniforms = {
+    time: gl.getUniformLocation(program, "time"),
+    mouse: gl.getUniformLocation(program, "mouse")
+  };
+  const mouse = { x: 0.5, y: 0.5 };
+  const fps = createFpsMeter(engineTelemetry.chipFps);
+  chipCanvas.addEventListener("pointermove", (event) => {
+    const rect = chipCanvas.getBoundingClientRect();
+    mouse.x = (event.clientX - rect.left) / rect.width;
+    mouse.y = (event.clientY - rect.top) / rect.height;
+  });
+  if (engineTelemetry.chipState) engineTelemetry.chipState.textContent = "WEBGL_ACTIVE";
+  const frame = (time) => {
+    requestAnimationFrame(frame);
+    if (!isEngineVisible("chip")) return;
+    fps(time);
+    const rect = chipCanvas.getBoundingClientRect();
+    const width = Math.max(320, Math.floor(rect.width * 0.8));
+    const height = Math.max(260, Math.floor(rect.height * 0.8));
+    if (chipCanvas.width !== width || chipCanvas.height !== height) {
+      chipCanvas.width = width;
+      chipCanvas.height = height;
+    }
+    gl.viewport(0, 0, width, height);
+    gl.useProgram(program);
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.enableVertexAttribArray(position);
+    gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
+    gl.uniform1f(uniforms.time, time * 0.001);
+    gl.uniform2f(uniforms.mouse, mouse.x, mouse.y);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  };
+  requestAnimationFrame(frame);
+}
 
 const setTelemetry = (key, value) => {
   if (telemetryTargets[key]) telemetryTargets[key].textContent = value;
