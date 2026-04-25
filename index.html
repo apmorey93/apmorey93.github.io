@@ -222,6 +222,7 @@
               <button class="compute-tab" id="tab-floorplan" type="button" role="tab" aria-selected="false" aria-controls="floorplan-panel" data-tab="floorplan">FLOORPLAN_SOLVER</button>
               <button class="compute-tab" id="tab-scan" type="button" role="tab" aria-selected="false" aria-controls="scan-panel" data-tab="scan">SCAN_CHAIN</button>
               <button class="compute-tab" id="tab-fault" type="button" role="tab" aria-selected="false" aria-controls="fault-panel" data-tab="fault">FAULT_INJECTOR</button>
+              <button class="compute-tab" id="tab-video" type="button" role="tab" aria-selected="false" aria-controls="video-panel" data-tab="video">VIDEO_SIGNAL</button>
             </div>
 
             <div class="compute-panel active" id="matrix-panel" role="tabpanel" aria-labelledby="tab-matrix">
@@ -422,6 +423,34 @@
                   <button type="button" data-fault-stage="memory">INJECT FAULT: MEMORY</button>
                   <button type="button" data-fault-stage="writeback">INJECT FAULT: WRITEBACK</button>
                 </div>
+              </div>
+            </div>
+
+            <div class="compute-panel" id="video-panel" role="tabpanel" aria-labelledby="tab-video" hidden>
+              <div class="compute-header video-header">
+                <span>[TARGET]: External Video Signal</span>
+                <span>YOUTUBE_EMBED</span>
+              </div>
+              <div class="compute-body video-body">
+                <div class="video-frame">
+                  <iframe
+                    src="https://www.youtube-nocookie.com/embed/Y97Ke07R7wc?rel=0&modestbranding=1"
+                    title="Embedded video"
+                    loading="lazy"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowfullscreen
+                  ></iframe>
+                </div>
+                <div class="telemetry-grid video-telemetry">
+                  <div>SOURCE: <span>YOUTUBE</span></div>
+                  <div>VIDEO ID: <span>Y97Ke07R7wc</span></div>
+                  <div>MODE: <span>PRIVACY_ENHANCED</span></div>
+                  <div>STATE: <span>EMBED_READY</span></div>
+                </div>
+              </div>
+              <div class="compute-status">
+                <span>TRANSPORT: <strong>IFRAME // NOCOOKIES DOMAIN</strong></span>
+                <a class="compute-link" href="https://www.youtube.com/watch?v=Y97Ke07R7wc" target="_blank" rel="noopener noreferrer">OPEN_SOURCE_VIDEO</a>
               </div>
             </div>
           </div>

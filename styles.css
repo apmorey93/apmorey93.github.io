@@ -663,7 +663,7 @@ svg {
 
 .compute-tabs {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-columns: repeat(8, minmax(0, 1fr));
   border-bottom: 1px solid var(--line);
 }
 
@@ -706,7 +706,8 @@ svg {
 .flow-header,
 .floorplan-header,
 .scan-header,
-.fault-header {
+.fault-header,
+.video-header {
   display: flex;
   justify-content: space-between;
   gap: 16px;
@@ -715,7 +716,8 @@ svg {
 #df-motion-status,
 .floorplan-header span:last-child,
 .scan-header span:last-child,
-.fault-header span:last-child {
+.fault-header span:last-child,
+.video-header span:last-child {
   color: var(--amber);
 }
 
@@ -802,15 +804,31 @@ svg {
 .lci-body,
 .floorplan-body,
 .scan-body,
-.fault-body {
+.fault-body,
+.video-body {
   grid-template-columns: minmax(340px, 1fr) minmax(320px, 0.72fr);
 }
 
 .lci-telemetry,
 .floorplan-telemetry,
 .scan-telemetry,
-.fault-telemetry {
+.fault-telemetry,
+.video-telemetry {
   align-content: stretch;
+}
+
+.video-frame {
+  min-height: 360px;
+  border-right: 1px solid var(--line);
+  background: #020202;
+}
+
+.video-frame iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 360px;
+  border: 0;
 }
 
 .floorplan-log {
@@ -910,7 +928,8 @@ svg {
   font-weight: 700;
 }
 
-.compute-status button {
+.compute-status button,
+.compute-link {
   min-height: 42px;
   padding: 0 16px;
   border: 1px solid var(--line);
@@ -920,6 +939,11 @@ svg {
   font-size: 0.72rem;
   font-weight: 700;
   cursor: pointer;
+}
+
+.compute-link {
+  display: inline-flex;
+  align-items: center;
 }
 
 .compute-status button:disabled {
@@ -1242,6 +1266,7 @@ body.fault-flash::before {
 .artifact-link:hover,
 .compute-tab:hover,
 .compute-status button:hover:not(:disabled),
+.compute-link:hover,
 .contact-panel a:hover,
 .contact-panel button:hover,
 #cli-close:hover {
@@ -1751,6 +1776,7 @@ body.fault-flash::before {
   #floorplan-canvas,
   #scan-canvas,
   #fault-canvas,
+  .video-frame,
   .artifact-card {
     border-right: 0;
   }
@@ -1761,6 +1787,7 @@ body.fault-flash::before {
   #floorplan-canvas,
   #scan-canvas,
   #fault-canvas,
+  .video-frame,
   .data-flow-stage {
     border-bottom: 1px solid var(--line);
   }
