@@ -547,6 +547,14 @@ const computeButton = $("#compute-rerun");
 const computeTabs = $$(".compute-tab");
 const computePanels = $$(".compute-panel");
 const lifeCanvas = $("#life-canvas");
+const dataFlowCanvas = $("#data-flow-canvas");
+const dataFlowTelemetry = {
+  backend: $("#df-backend"),
+  count: $("#df-count"),
+  compute: $("#df-compute"),
+  state: $("#df-state"),
+  motion: $("#df-motion-status")
+};
 const lifeControls = {
   state: $("#life-state"),
   generation: $("#life-generation"),
@@ -564,6 +572,8 @@ const CPU_MATRIX_SIZE = 128;
 const WORKGROUP_SIZE = 8;
 const LIFE_COLUMNS = 80;
 const LIFE_ROWS = 48;
+let dataFlowStarted = false;
+let dataFlowStop = null;
 
 const setActiveComputeTab = (tabName) => {
   computeTabs.forEach((tab) => {
@@ -581,11 +591,464 @@ const setActiveComputeTab = (tabName) => {
   if (tabName === "life") {
     drawLife();
   }
+
+  if (tabName === "flow") {
+    ensureDataFlow();
+  }
 };
 
 computeTabs.forEach((tab) => {
   tab.addEventListener("click", () => setActiveComputeTab(tab.dataset.tab || "matrix"));
 });
+
+const setDataFlowTelemetry = (key, value) => {
+  if (dataFlowTelemetry[key]) dataFlowTelemetry[key].textContent = value;
+};
+
+const isDataFlowVisible = () => {
+  const panel = $("#flow-panel");
+  return Boolean(panel && !panel.hidden);
+};
+
+const syncDataFlowCanvas = (canvas) => {
+  const parent = canvas.parentElement;
+  const rect = parent ? parent.getBoundingClientRect() : canvas.getBoundingClientRect();
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const width = Math.max(320, Math.floor((rect.width || 960) * dpr));
+  const height = Math.max(180, Math.floor((rect.height || 320) * dpr));
+  const changed = canvas.width !== width || canvas.height !== height;
+
+  if (changed) {
+    canvas.width = width;
+    canvas.height = height;
+  }
+
+  return { width, height, changed };
+};
+
+const paintDataFlowIdle = (canvas) => {
+  const { width, height } = syncDataFlowCanvas(canvas);
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  ctx.fillStyle = "#020202";
+  ctx.fillRect(0, 0, width, height);
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.12)";
+  ctx.lineWidth = 1;
+
+  for (let x = 0; x <= width; x += 48) {
+    ctx.beginPath();
+    ctx.moveTo(x + 0.5, 0);
+    ctx.lineTo(x + 0.5, height);
+    ctx.stroke();
+  }
+
+  for (let y = 0; y <= height; y += 48) {
+    ctx.beginPath();
+    ctx.moveTo(0, y + 0.5);
+    ctx.lineTo(width, y + 0.5);
+    ctx.stroke();
+  }
+};
+
+async function ensureDataFlow() {
+  if (dataFlowStarted || !dataFlowCanvas) return;
+  dataFlowStarted = true;
+
+  try {
+    dataFlowStop = await initDataFlow();
+  } catch (error) {
+    console.warn("Data flow field failed to initialize.", error);
+    setDataFlowTelemetry("backend", "FAULT");
+    setDataFlowTelemetry("compute", "HALTED");
+    setDataFlowTelemetry("state", "INIT_ERROR");
+    paintDataFlowIdle(dataFlowCanvas);
+  }
+}
+
+async function initDataFlow() {
+  if (!dataFlowCanvas) return null;
+
+  paintDataFlowIdle(dataFlowCanvas);
+  setDataFlowTelemetry("backend", "INITIALIZING...");
+  setDataFlowTelemetry("count", "--");
+  setDataFlowTelemetry("compute", "--");
+  setDataFlowTelemetry("state", "BOOTSTRAP");
+
+  if (dataFlowTelemetry.motion) {
+    dataFlowTelemetry.motion.hidden = true;
+  }
+
+  if (reducedMotion) {
+    if (dataFlowTelemetry.motion) dataFlowTelemetry.motion.hidden = false;
+    setDataFlowTelemetry("backend", "HALTED");
+    setDataFlowTelemetry("count", "0");
+    setDataFlowTelemetry("compute", "IDLE");
+    setDataFlowTelemetry("state", "ACCESSIBILITY_LOCK");
+    return null;
+  }
+
+  syncDataFlowCanvas(dataFlowCanvas);
+  const pointer = {
+    x: dataFlowCanvas.width * 0.5,
+    y: dataFlowCanvas.height * 0.5,
+    active: 0
+  };
+
+  const updatePointer = (event) => {
+    const rect = dataFlowCanvas.getBoundingClientRect();
+    pointer.x = ((event.clientX - rect.left) / Math.max(1, rect.width)) * dataFlowCanvas.width;
+    pointer.y = ((event.clientY - rect.top) / Math.max(1, rect.height)) * dataFlowCanvas.height;
+    pointer.active = 1;
+  };
+
+  dataFlowCanvas.addEventListener("pointermove", updatePointer);
+  dataFlowCanvas.addEventListener("pointerenter", updatePointer);
+  dataFlowCanvas.addEventListener("pointerleave", () => {
+    pointer.active = 0;
+  });
+
+  if (window.isSecureContext && navigator.gpu) {
+    try {
+      return await runWebGpuDataFlow(dataFlowCanvas, pointer);
+    } catch (error) {
+      console.warn("WebGPU data flow setup failed, falling back to CPU.", error);
+    }
+  }
+
+  return runCpuDataFlow(dataFlowCanvas, pointer);
+}
+
+async function runWebGpuDataFlow(canvas, pointer) {
+  const adapter = await navigator.gpu.requestAdapter({ powerPreference: "high-performance" });
+  if (!adapter) throw new Error("GPU_ADAPTER_UNAVAILABLE");
+
+  const device = await adapter.requestDevice();
+  const context = canvas.getContext("webgpu");
+  if (!context) throw new Error("WEBGPU_CONTEXT_UNAVAILABLE");
+
+  const format = navigator.gpu.getPreferredCanvasFormat();
+  context.configure({ device, format, alphaMode: "premultiplied" });
+
+  const particleCount = 16384;
+  const workgroupSize = 64;
+  const particleData = new Float32Array(particleCount * 4);
+
+  syncDataFlowCanvas(canvas);
+  for (let index = 0; index < particleCount; index += 1) {
+    const offset = index * 4;
+    particleData[offset] = Math.random() * canvas.width;
+    particleData[offset + 1] = Math.random() * canvas.height;
+    particleData[offset + 2] = (Math.random() - 0.5) * 18;
+    particleData[offset + 3] = (Math.random() - 0.5) * 18;
+  }
+
+  const computeShader = `
+struct Particle {
+  pos: vec2<f32>,
+  vel: vec2<f32>,
+}
+
+struct Params {
+  pointer: vec2<f32>,
+  active: f32,
+  dt: f32,
+  res: vec2<f32>,
+}
+
+@group(0) @binding(0) var<storage, read_write> particles: array<Particle>;
+@group(0) @binding(1) var<uniform> params: Params;
+
+@compute @workgroup_size(${workgroupSize})
+fn main(@builtin(global_invocation_id) id: vec3<u32>) {
+  let i = id.x;
+  if (i >= ${particleCount}u) {
+    return;
+  }
+
+  var p = particles[i];
+
+  if (params.active > 0.0) {
+    let direction = params.pointer - p.pos;
+    let distance = max(length(direction), 8.0);
+    let force = normalize(direction) * (62000.0 / (distance * distance));
+    p.vel += force * params.dt;
+  }
+
+  p.vel.x += sin((p.pos.y + f32(i % 17u)) * 0.012) * 1.8;
+  p.vel.y += cos((p.pos.x + f32(i % 23u)) * 0.009) * 0.65;
+  p.vel *= 0.962;
+  p.pos += p.vel * params.dt;
+
+  if (p.pos.x < 0.0) { p.pos.x = params.res.x; }
+  if (p.pos.x > params.res.x) { p.pos.x = 0.0; }
+  if (p.pos.y < 0.0) { p.pos.y = params.res.y; }
+  if (p.pos.y > params.res.y) { p.pos.y = 0.0; }
+
+  particles[i] = p;
+}
+`;
+
+  const renderShader = `
+struct Particle {
+  pos: vec2<f32>,
+  vel: vec2<f32>,
+}
+
+@group(0) @binding(0) var<storage, read> particles: array<Particle>;
+@group(0) @binding(1) var<uniform> resolution: vec2<f32>;
+
+struct VertexOut {
+  @builtin(position) position: vec4<f32>,
+  @location(0) speed: f32,
+}
+
+@vertex
+fn vs_main(@builtin(vertex_index) vertexIndex: u32) -> VertexOut {
+  let p = particles[vertexIndex];
+  let ndc = (p.pos / resolution) * 2.0 - 1.0;
+  var out: VertexOut;
+  out.position = vec4<f32>(ndc.x, -ndc.y, 0.0, 1.0);
+  out.speed = length(p.vel);
+  return out;
+}
+
+@fragment
+fn fs_main(@location(0) speed: f32) -> @location(0) vec4<f32> {
+  let blue = vec3<f32>(0.49, 0.83, 0.99);
+  let amber = vec3<f32>(0.96, 0.62, 0.04);
+  let color = mix(blue, amber, clamp(speed * 0.038, 0.0, 1.0));
+  return vec4<f32>(color, 0.72);
+}
+`;
+
+  const particleBuffer = device.createBuffer({
+    size: particleData.byteLength,
+    usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
+  });
+  device.queue.writeBuffer(particleBuffer, 0, particleData);
+
+  const paramsBuffer = device.createBuffer({
+    size: 32,
+    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+  });
+
+  const resolutionBuffer = device.createBuffer({
+    size: 8,
+    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+  });
+  device.queue.writeBuffer(resolutionBuffer, 0, new Float32Array([canvas.width, canvas.height]));
+
+  const computePipeline = await device.createComputePipelineAsync({
+    layout: "auto",
+    compute: {
+      module: device.createShaderModule({ code: computeShader }),
+      entryPoint: "main"
+    }
+  });
+
+  const renderPipeline = await device.createRenderPipelineAsync({
+    layout: "auto",
+    vertex: {
+      module: device.createShaderModule({ code: renderShader }),
+      entryPoint: "vs_main"
+    },
+    fragment: {
+      module: device.createShaderModule({ code: renderShader }),
+      entryPoint: "fs_main",
+      targets: [
+        {
+          format,
+          blend: {
+            color: { srcFactor: "src-alpha", dstFactor: "one", operation: "add" },
+            alpha: { srcFactor: "one", dstFactor: "one", operation: "add" }
+          }
+        }
+      ]
+    },
+    primitive: { topology: "point-list" }
+  });
+
+  const computeBindGroup = device.createBindGroup({
+    layout: computePipeline.getBindGroupLayout(0),
+    entries: [
+      { binding: 0, resource: { buffer: particleBuffer } },
+      { binding: 1, resource: { buffer: paramsBuffer } }
+    ]
+  });
+
+  const renderBindGroup = device.createBindGroup({
+    layout: renderPipeline.getBindGroupLayout(0),
+    entries: [
+      { binding: 0, resource: { buffer: particleBuffer } },
+      { binding: 1, resource: { buffer: resolutionBuffer } }
+    ]
+  });
+
+  setDataFlowTelemetry("backend", "WEBGPU NATIVE");
+  setDataFlowTelemetry("count", particleCount.toLocaleString("en-US"));
+  setDataFlowTelemetry("compute", "WGSL_COMPUTE+POINT_LIST");
+  setDataFlowTelemetry("state", "ACTIVE_FLOW");
+  if (dataFlowTelemetry.backend) dataFlowTelemetry.backend.style.color = "#7dd3fc";
+
+  let animationId = 0;
+  let lastTime = performance.now();
+  let frameCount = 0;
+
+  const frame = (time) => {
+    animationId = requestAnimationFrame(frame);
+
+    if (!isDataFlowVisible()) {
+      lastTime = time;
+      return;
+    }
+
+    const size = syncDataFlowCanvas(canvas);
+    if (size.changed) {
+      context.configure({ device, format, alphaMode: "premultiplied" });
+      device.queue.writeBuffer(resolutionBuffer, 0, new Float32Array([canvas.width, canvas.height]));
+    }
+
+    const dt = Math.min((time - lastTime) / 1000, 0.08);
+    lastTime = time;
+    device.queue.writeBuffer(
+      paramsBuffer,
+      0,
+      new Float32Array([pointer.x, pointer.y, pointer.active, dt, canvas.width, canvas.height])
+    );
+
+    const encoder = device.createCommandEncoder();
+    const computePass = encoder.beginComputePass();
+    computePass.setPipeline(computePipeline);
+    computePass.setBindGroup(0, computeBindGroup);
+    computePass.dispatchWorkgroups(Math.ceil(particleCount / workgroupSize));
+    computePass.end();
+
+    const renderPass = encoder.beginRenderPass({
+      colorAttachments: [
+        {
+          view: context.getCurrentTexture().createView(),
+          clearValue: { r: 0.008, g: 0.008, b: 0.008, a: 1 },
+          loadOp: "clear",
+          storeOp: "store"
+        }
+      ]
+    });
+    renderPass.setPipeline(renderPipeline);
+    renderPass.setBindGroup(0, renderBindGroup);
+    renderPass.draw(particleCount, 1, 0, 0);
+    renderPass.end();
+
+    device.queue.submit([encoder.finish()]);
+
+    frameCount += 1;
+    if (frameCount % 24 === 0) {
+      setDataFlowTelemetry("compute", `${Math.round(dt * 1000)} ms // ZERO_READBACK`);
+    }
+  };
+
+  device.lost.then(() => {
+    setDataFlowTelemetry("state", "DEVICE_LOST");
+  });
+
+  animationId = requestAnimationFrame(frame);
+  return () => {
+    cancelAnimationFrame(animationId);
+    particleBuffer.destroy();
+    paramsBuffer.destroy();
+    resolutionBuffer.destroy();
+  };
+}
+
+function runCpuDataFlow(canvas, pointer) {
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("CANVAS_2D_UNAVAILABLE");
+
+  const particleCount = 2048;
+  const positions = new Float32Array(particleCount * 2);
+  const velocities = new Float32Array(particleCount * 2);
+  syncDataFlowCanvas(canvas);
+
+  for (let index = 0; index < particleCount; index += 1) {
+    positions[index * 2] = Math.random() * canvas.width;
+    positions[index * 2 + 1] = Math.random() * canvas.height;
+    velocities[index * 2] = (Math.random() - 0.5) * 14;
+    velocities[index * 2 + 1] = (Math.random() - 0.5) * 14;
+  }
+
+  setDataFlowTelemetry("backend", "CPU FALLBACK");
+  setDataFlowTelemetry("count", particleCount.toLocaleString("en-US"));
+  setDataFlowTelemetry("compute", "JS_TYPED_ARRAY");
+  setDataFlowTelemetry("state", "ACTIVE_FLOW");
+  if (dataFlowTelemetry.backend) dataFlowTelemetry.backend.style.color = "#9ca3af";
+
+  let animationId = 0;
+  let lastTime = performance.now();
+  let frameCount = 0;
+
+  const frame = (time) => {
+    animationId = requestAnimationFrame(frame);
+
+    if (!isDataFlowVisible()) {
+      lastTime = time;
+      return;
+    }
+
+    syncDataFlowCanvas(canvas);
+    const dt = Math.min((time - lastTime) / 1000, 0.08);
+    lastTime = time;
+
+    ctx.fillStyle = "rgba(2, 2, 2, 0.44)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    for (let index = 0; index < particleCount; index += 1) {
+      const offset = index * 2;
+      let x = positions[offset];
+      let y = positions[offset + 1];
+      let vx = velocities[offset];
+      let vy = velocities[offset + 1];
+
+      if (pointer.active) {
+        const dx = pointer.x - x;
+        const dy = pointer.y - y;
+        const distance = Math.max(Math.sqrt(dx * dx + dy * dy), 8);
+        const force = 62000 / (distance * distance);
+        vx += (dx / distance) * force * dt;
+        vy += (dy / distance) * force * dt;
+      }
+
+      vx += Math.sin((y + (index % 17)) * 0.012) * 1.8;
+      vy += Math.cos((x + (index % 23)) * 0.009) * 0.65;
+      vx *= 0.962;
+      vy *= 0.962;
+      x += vx * dt;
+      y += vy * dt;
+
+      if (x < 0) x = canvas.width;
+      if (x > canvas.width) x = 0;
+      if (y < 0) y = canvas.height;
+      if (y > canvas.height) y = 0;
+
+      positions[offset] = x;
+      positions[offset + 1] = y;
+      velocities[offset] = vx;
+      velocities[offset + 1] = vy;
+
+      const speed = Math.min(1, Math.sqrt(vx * vx + vy * vy) * 0.038);
+      ctx.fillStyle =
+        speed > 0.62 ? "rgba(245, 158, 11, 0.72)" : "rgba(125, 211, 252, 0.62)";
+      ctx.fillRect(x, y, 2, 2);
+    }
+
+    frameCount += 1;
+    if (frameCount % 24 === 0) {
+      setDataFlowTelemetry("compute", `${Math.round(dt * 1000)} ms // MAIN_THREAD`);
+    }
+  };
+
+  animationId = requestAnimationFrame(frame);
+  return () => cancelAnimationFrame(animationId);
+}
 
 const setTelemetry = (key, value) => {
   if (telemetryTargets[key]) telemetryTargets[key].textContent = value;

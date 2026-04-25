@@ -216,6 +216,7 @@
           <div class="compute-cell-wrapper reveal-up" aria-label="Interactive logic console">
             <div class="compute-tabs" role="tablist" aria-label="Interactive logic modes">
               <button class="compute-tab active" id="tab-matrix" type="button" role="tab" aria-selected="true" aria-controls="matrix-panel" data-tab="matrix">MATRIX_KERNEL</button>
+              <button class="compute-tab" id="tab-flow" type="button" role="tab" aria-selected="false" aria-controls="flow-panel" data-tab="flow">DATA_FLOW</button>
               <button class="compute-tab" id="tab-life" type="button" role="tab" aria-selected="false" aria-controls="life-panel" data-tab="life">GAME_OF_LIFE</button>
             </div>
 
@@ -235,6 +236,22 @@
               <div class="compute-status">
                 <span>ESTIMATED GFLOP/s: <strong id="gflops">--</strong></span>
                 <button type="button" id="compute-rerun">REPLAY_KERNEL</button>
+              </div>
+            </div>
+
+            <div class="compute-panel" id="flow-panel" role="tabpanel" aria-labelledby="tab-flow" hidden>
+              <div class="compute-header flow-header">
+                <span>[DATA_FLOW_FIELD]</span>
+                <span id="df-motion-status" hidden>REDUCED_MOTION: ACTIVE</span>
+              </div>
+              <div class="data-flow-stage">
+                <canvas id="data-flow-canvas" width="960" height="320" aria-label="Ambient GPU data flow particle field"></canvas>
+              </div>
+              <div class="telemetry-grid flow-telemetry">
+                <div>BACKEND: <span id="df-backend">INITIALIZING...</span></div>
+                <div>PARTICLES: <span id="df-count">--</span></div>
+                <div>COMPUTE: <span id="df-compute">--</span></div>
+                <div>STATE: <span id="df-state">--</span></div>
               </div>
             </div>
 
