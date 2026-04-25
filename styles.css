@@ -34,9 +34,32 @@ body {
   background:
     linear-gradient(var(--line-faint) 1px, transparent 1px),
     linear-gradient(90deg, var(--line-faint) 1px, transparent 1px),
+    repeating-linear-gradient(
+      115deg,
+      transparent 0,
+      transparent 136px,
+      rgba(125, 211, 252, 0.048) 137px,
+      rgba(125, 211, 252, 0.048) 138px,
+      transparent 139px,
+      transparent 276px
+    ),
+    repeating-linear-gradient(
+      35deg,
+      transparent 0,
+      transparent 188px,
+      rgba(245, 158, 11, 0.036) 189px,
+      rgba(245, 158, 11, 0.036) 190px,
+      transparent 191px,
+      transparent 380px
+    ),
     var(--bg);
-  background-position: var(--grid-x) var(--grid-y), var(--grid-x) var(--grid-y), 0 0;
-  background-size: 48px 48px;
+  background-position:
+    var(--grid-x) var(--grid-y),
+    var(--grid-x) var(--grid-y),
+    calc(var(--grid-x) * -0.7) calc(var(--grid-y) * 0.45),
+    calc(var(--grid-x) * 0.4) calc(var(--grid-y) * -0.55),
+    0 0;
+  background-size: 48px 48px, 48px 48px, 720px 720px, 960px 960px, auto;
   color: var(--text);
   font-family: var(--font-display);
   font-size: 16px;
@@ -60,6 +83,58 @@ body::before {
       transparent 6px
     );
   opacity: 0.52;
+}
+
+body::after {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  content: "";
+  background:
+    linear-gradient(
+      90deg,
+      transparent 0,
+      transparent 62%,
+      rgba(125, 211, 252, 0.075) 62%,
+      rgba(125, 211, 252, 0.075) calc(62% + 1px),
+      transparent calc(62% + 2px),
+      transparent 100%
+    ),
+    linear-gradient(
+      0deg,
+      transparent 0,
+      transparent 48%,
+      rgba(245, 158, 11, 0.058) 48%,
+      rgba(245, 158, 11, 0.058) calc(48% + 1px),
+      transparent calc(48% + 2px),
+      transparent 100%
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent 0,
+      transparent 286px,
+      rgba(255, 255, 255, 0.035) 287px,
+      transparent 288px,
+      transparent 420px
+    );
+  background-size: 360px 360px, 520px 520px, 840px 100%;
+  opacity: 0.46;
+  animation: routing-layer-drift 24s linear infinite;
+}
+
+@keyframes routing-layer-drift {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  50% {
+    transform: translate3d(-18px, 12px, 0);
+  }
+
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
 }
 
 a {
