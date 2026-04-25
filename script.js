@@ -6,6 +6,8 @@ const mobileMenu = $("#mobile-menu");
 const progress = $(".scroll-progress");
 const resumeOpen = $("#resume-open");
 const resumeModal = $("#resume-modal");
+const infraOpen = $("#infra-open");
+const infraModal = $("#infra-modal");
 const root = document.documentElement;
 
 const reducedMotion =
@@ -151,6 +153,17 @@ if (resumeOpen && resumeModal) {
     }
 
     window.location.href = "mailto:adityamorey1723@gmail.com?subject=Resume%20request";
+  });
+}
+
+if (infraOpen && infraModal) {
+  infraOpen.addEventListener("click", () => {
+    if (typeof infraModal.showModal === "function") {
+      infraModal.showModal();
+      return;
+    }
+
+    infraModal.setAttribute("open", "");
   });
 }
 
