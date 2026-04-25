@@ -562,6 +562,7 @@ const computePanels = $$(".compute-panel");
 const lifeCanvas = $("#life-canvas");
 const dataFlowCanvas = $("#data-flow-canvas");
 const lciCanvas = $("#lci-canvas");
+const floorplanCanvas = $("#floorplan-canvas");
 const dataFlowTelemetry = {
   backend: $("#df-backend"),
   count: $("#df-count"),
@@ -578,6 +579,12 @@ const lciControls = {
   standard: $("#lci-std-val"),
   mstackPhi: $("#lci-mstack-phi"),
   standardPhi: $("#lci-std-phi")
+};
+const floorplanTelemetry = {
+  wire: $("#fp-wire-delay"),
+  thermal: $("#fp-thermal"),
+  routing: $("#fp-routing"),
+  score: $("#fp-score")
 };
 const lifeControls = {
   state: $("#life-state"),
@@ -623,6 +630,10 @@ const setActiveComputeTab = (tabName) => {
   if (tabName === "lci") {
     requestAnimationFrame(drawLCI);
   }
+
+  if (tabName === "floorplan") {
+    requestAnimationFrame(renderFloorplan);
+  }
 };
 
 computeTabs.forEach((tab) => {
@@ -640,6 +651,11 @@ const isDataFlowVisible = () => {
 
 const isLciVisible = () => {
   const panel = $("#lci-panel");
+  return Boolean(panel && !panel.hidden);
+};
+
+const isFloorplanVisible = () => {
+  const panel = $("#floorplan-panel");
   return Boolean(panel && !panel.hidden);
 };
 
@@ -1240,6 +1256,255 @@ if (lciControls.latency && lciControls.reliability) {
     if (isLciVisible()) drawLCI();
   });
 }
+
+let floorplanBlocks = [];
+let floorplanDragging = null;
+let floorplanOffset = { x: 0, y: 0 };
+let floorplanReady = false;
+
+const syncFloorplanCanvas = () => {
+  if (!floorplanCanvas) return { width: 0, height: 0, changed: false };
+
+  const rect = floorplanCanvas.getBoundingClientRect();
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const oldWidth = floorplanCanvas.width;
+  const oldHeight = floorplanCanvas.height;
+  const width = Math.max(360, Math.floor((rect.width || 640) * dpr));
+  const height = Math.max(280, Math.floor((rect.height || 384) * dpr));
+  const changed = oldWidth !== width || oldHeight !== height;
+
+  if (changed) {
+    floorplanCanvas.width = width;
+    floorplanCanvas.height = height;
+
+    if (floorplanBlocks.length && oldWidth > 0 && oldHeight > 0) {
+      const scaleX = width / oldWidth;
+      const scaleY = height / oldHeight;
+      floorplanBlocks.forEach((block) => {
+        block.x *= scaleX;
+        block.y *= scaleY;
+        block.w *= scaleX;
+        block.h *= scaleY;
+      });
+    }
+  }
+
+  return { width, height, changed };
+};
+
+const seedFloorplanBlocks = (width, height) => {
+  const scale = Math.max(0.78, Math.min(width / 640, height / 384));
+  const block = (id, x, y, w, h, heat, color, label) => ({
+    id,
+    x: Math.min(width - w * scale - 8, x * scale),
+    y: Math.min(height - h * scale - 8, y * scale),
+    w: w * scale,
+    h: h * scale,
+    heat,
+    color,
+    label
+  });
+
+  floorplanBlocks = [
+    block("ALU", 100, 90, 80, 80, 100, "#f59e0b", "COMPUTE"),
+    block("L2", 258, 105, 104, 62, 42, "#7dd3fc", "L2_CACHE"),
+    block("MEM", 426, 198, 66, 122, 62, "#9ca3af", "MEM_CTRL"),
+    block("TAP", 58, 270, 48, 44, 12, "#e5e7eb", "DEBUG_TAP")
+  ];
+};
+
+const getFloorplanCenter = (block) => ({
+  x: block.x + block.w * 0.5,
+  y: block.y + block.h * 0.5
+});
+
+const getFloorplanPointer = (event) => {
+  const rect = floorplanCanvas.getBoundingClientRect();
+  return {
+    x: ((event.clientX - rect.left) / Math.max(1, rect.width)) * floorplanCanvas.width,
+    y: ((event.clientY - rect.top) / Math.max(1, rect.height)) * floorplanCanvas.height
+  };
+};
+
+const constrainFloorplanBlock = (block) => {
+  block.x = Math.max(0, Math.min(floorplanCanvas.width - block.w, block.x));
+  block.y = Math.max(0, Math.min(floorplanCanvas.height - block.h, block.y));
+};
+
+function renderFloorplan() {
+  if (!floorplanCanvas) return;
+  const ctx = floorplanCanvas.getContext("2d");
+  if (!ctx) return;
+
+  const { width, height } = syncFloorplanCanvas();
+  const heatScale = Math.max(0.78, Math.min(width / 640, height / 384));
+  if (!floorplanReady) {
+    seedFloorplanBlocks(width, height);
+    floorplanReady = true;
+  }
+
+  ctx.fillStyle = "#020202";
+  ctx.fillRect(0, 0, width, height);
+
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.06)";
+  ctx.lineWidth = 1;
+  for (let x = 0; x <= width; x += 20) {
+    ctx.beginPath();
+    ctx.moveTo(x + 0.5, 0);
+    ctx.lineTo(x + 0.5, height);
+    ctx.stroke();
+  }
+  for (let y = 0; y <= height; y += 20) {
+    ctx.beginPath();
+    ctx.moveTo(0, y + 0.5);
+    ctx.lineTo(width, y + 0.5);
+    ctx.stroke();
+  }
+
+  floorplanBlocks.forEach((block) => {
+    const center = getFloorplanCenter(block);
+    const radius = block.heat * 1.45 * heatScale;
+    const gradient = ctx.createRadialGradient(center.x, center.y, 0, center.x, center.y, radius);
+    gradient.addColorStop(0, `rgba(245, 158, 11, ${Math.min(0.42, block.heat / 260)})`);
+    gradient.addColorStop(1, "rgba(245, 158, 11, 0)");
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(center.x, center.y, radius, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  const blockById = Object.fromEntries(floorplanBlocks.map((block) => [block.id, block]));
+  const routes = [
+    { a: blockById.ALU, b: blockById.L2, weight: 3 },
+    { a: blockById.L2, b: blockById.MEM, weight: 2 },
+    { a: blockById.TAP, b: blockById.ALU, weight: 0.5 }
+  ];
+  let totalWireDistance = 0;
+
+  ctx.setLineDash([4, 5]);
+  routes.forEach((route) => {
+    const start = getFloorplanCenter(route.a);
+    const end = getFloorplanCenter(route.b);
+    const distance = Math.abs(start.x - end.x) + Math.abs(start.y - end.y);
+    totalWireDistance += distance * route.weight;
+
+    ctx.strokeStyle = route.weight > 2 ? "rgba(125, 211, 252, 0.68)" : "rgba(229, 231, 235, 0.34)";
+    ctx.lineWidth = route.weight;
+    ctx.beginPath();
+    ctx.moveTo(start.x, start.y);
+    ctx.lineTo(end.x, start.y);
+    ctx.lineTo(end.x, end.y);
+    ctx.stroke();
+  });
+  ctx.setLineDash([]);
+
+  let thermalPenalty = 0;
+  for (let i = 0; i < floorplanBlocks.length; i += 1) {
+    for (let j = i + 1; j < floorplanBlocks.length; j += 1) {
+      const first = floorplanBlocks[i];
+      const second = floorplanBlocks[j];
+      const firstCenter = getFloorplanCenter(first);
+      const secondCenter = getFloorplanCenter(second);
+      const distance = Math.max(1, Math.hypot(firstCenter.x - secondCenter.x, firstCenter.y - secondCenter.y));
+      const safeDistance = (first.heat + second.heat) * 0.74 * heatScale;
+
+      if (distance < safeDistance) {
+        const overlap = (safeDistance - distance) / safeDistance;
+        thermalPenalty += overlap * overlap * Math.sqrt(first.heat * second.heat) * 1.65;
+      }
+    }
+  }
+
+  floorplanBlocks.forEach((block) => {
+    ctx.fillStyle = "#0a0a0a";
+    ctx.fillRect(block.x, block.y, block.w, block.h);
+    ctx.strokeStyle = block.color;
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(block.x + 0.5, block.y + 0.5, block.w - 1, block.h - 1);
+
+    ctx.fillStyle = block.color;
+    ctx.font = "10px JetBrains Mono, SFMono-Regular, Consolas, monospace";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(block.label, block.x + block.w * 0.5, block.y + block.h * 0.5);
+  });
+
+  const wireDelayPs = totalWireDistance * 0.31;
+  const wireScore = Math.max(0, 100 - wireDelayPs / 6.8);
+  const heatScore = Math.max(0, 100 - thermalPenalty * 1.4);
+  const totalScore = wireScore * 0.62 + heatScore * 0.38;
+  const critical = wireScore < 38 || thermalPenalty > 58;
+
+  if (floorplanTelemetry.wire) {
+    floorplanTelemetry.wire.textContent = `${Math.round(wireDelayPs)} ps`;
+    floorplanTelemetry.wire.style.color = wireScore < 45 ? "#ef4444" : "#7dd3fc";
+  }
+  if (floorplanTelemetry.thermal) {
+    floorplanTelemetry.thermal.textContent = `${thermalPenalty.toFixed(1)} W/mm2`;
+    floorplanTelemetry.thermal.style.color = thermalPenalty > 58 ? "#ef4444" : "#f59e0b";
+  }
+  if (floorplanTelemetry.routing) {
+    floorplanTelemetry.routing.textContent = critical ? "CONSTRAINT_FAIL" : "TIMING_MET";
+    floorplanTelemetry.routing.style.color = critical ? "#ef4444" : "#9ca3af";
+  }
+  if (floorplanTelemetry.score) {
+    floorplanTelemetry.score.textContent = `${Math.max(0, totalScore).toFixed(1)} / 100`;
+    floorplanTelemetry.score.style.color = critical ? "#ef4444" : "#e5e7eb";
+  }
+}
+
+const initFloorplan = () => {
+  if (!floorplanCanvas) return;
+
+  floorplanCanvas.addEventListener("pointerdown", (event) => {
+    const pointer = getFloorplanPointer(event);
+
+    for (let index = floorplanBlocks.length - 1; index >= 0; index -= 1) {
+      const block = floorplanBlocks[index];
+      const hit =
+        pointer.x >= block.x &&
+        pointer.x <= block.x + block.w &&
+        pointer.y >= block.y &&
+        pointer.y <= block.y + block.h;
+
+      if (!hit) continue;
+
+      floorplanDragging = block;
+      floorplanOffset = { x: pointer.x - block.x, y: pointer.y - block.y };
+      floorplanCanvas.classList.add("dragging");
+      floorplanCanvas.setPointerCapture(event.pointerId);
+      event.preventDefault();
+      break;
+    }
+  });
+
+  floorplanCanvas.addEventListener("pointermove", (event) => {
+    if (!floorplanDragging) return;
+    const pointer = getFloorplanPointer(event);
+    floorplanDragging.x = pointer.x - floorplanOffset.x;
+    floorplanDragging.y = pointer.y - floorplanOffset.y;
+    constrainFloorplanBlock(floorplanDragging);
+    renderFloorplan();
+    event.preventDefault();
+  });
+
+  const clearDrag = (event) => {
+    if (!floorplanDragging) return;
+    floorplanDragging = null;
+    floorplanCanvas.classList.remove("dragging");
+    if (event && floorplanCanvas.hasPointerCapture(event.pointerId)) {
+      floorplanCanvas.releasePointerCapture(event.pointerId);
+    }
+  };
+
+  floorplanCanvas.addEventListener("pointerup", clearDrag);
+  floorplanCanvas.addEventListener("pointercancel", clearDrag);
+  window.addEventListener("resize", () => {
+    if (isFloorplanVisible()) renderFloorplan();
+  });
+};
+
+initFloorplan();
 
 const setTelemetry = (key, value) => {
   if (telemetryTargets[key]) telemetryTargets[key].textContent = value;

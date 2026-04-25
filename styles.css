@@ -630,7 +630,7 @@ svg {
 
 .compute-tabs {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   border-bottom: 1px solid var(--line);
 }
 
@@ -667,13 +667,15 @@ svg {
   font-weight: 700;
 }
 
-.flow-header {
+.flow-header,
+.floorplan-header {
   display: flex;
   justify-content: space-between;
   gap: 16px;
 }
 
-#df-motion-status {
+#df-motion-status,
+.floorplan-header span:last-child {
   color: var(--amber);
 }
 
@@ -686,7 +688,8 @@ svg {
 #compute-canvas,
 #life-canvas,
 #data-flow-canvas,
-#lci-canvas {
+#lci-canvas,
+#floorplan-canvas {
   width: 100%;
   height: 100%;
   border: 0;
@@ -697,11 +700,13 @@ svg {
 
 #compute-canvas,
 #life-canvas,
-#lci-canvas {
+#lci-canvas,
+#floorplan-canvas {
   min-height: 360px;
 }
 
-#life-canvas {
+#life-canvas,
+#floorplan-canvas {
   cursor: crosshair;
 }
 
@@ -723,6 +728,16 @@ svg {
   height: 360px;
 }
 
+#floorplan-canvas {
+  height: 360px;
+  cursor: grab;
+  touch-action: none;
+}
+
+#floorplan-canvas.dragging {
+  cursor: grabbing;
+}
+
 .telemetry-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -732,12 +747,24 @@ svg {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
-.lci-body {
+.lci-body,
+.floorplan-body {
   grid-template-columns: minmax(340px, 1fr) minmax(320px, 0.72fr);
 }
 
-.lci-telemetry {
+.lci-telemetry,
+.floorplan-telemetry {
   align-content: stretch;
+}
+
+.floorplan-log {
+  grid-column: span 2;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.floorplan-log p {
+  margin: 0 0 8px;
 }
 
 .lci-control {
@@ -1236,6 +1263,7 @@ svg {
   #life-canvas,
   #data-flow-canvas,
   #lci-canvas,
+  #floorplan-canvas,
   .artifact-card {
     border-right: 0;
   }
@@ -1243,6 +1271,7 @@ svg {
   #compute-canvas,
   #life-canvas,
   #lci-canvas,
+  #floorplan-canvas,
   .data-flow-stage {
     border-bottom: 1px solid var(--line);
   }
@@ -1264,6 +1293,10 @@ svg {
   }
 
   .lci-control {
+    grid-column: span 1;
+  }
+
+  .floorplan-log {
     grid-column: span 1;
   }
 

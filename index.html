@@ -219,6 +219,7 @@
               <button class="compute-tab" id="tab-flow" type="button" role="tab" aria-selected="false" aria-controls="flow-panel" data-tab="flow">DATA_FLOW</button>
               <button class="compute-tab" id="tab-life" type="button" role="tab" aria-selected="false" aria-controls="life-panel" data-tab="life">GAME_OF_LIFE</button>
               <button class="compute-tab" id="tab-lci" type="button" role="tab" aria-selected="false" aria-controls="lci-panel" data-tab="lci">LCI_MODEL</button>
+              <button class="compute-tab" id="tab-floorplan" type="button" role="tab" aria-selected="false" aria-controls="floorplan-panel" data-tab="floorplan">FLOORPLAN_SOLVER</button>
             </div>
 
             <div class="compute-panel active" id="matrix-panel" role="tabpanel" aria-labelledby="tab-matrix">
@@ -303,6 +304,28 @@
               </div>
               <div class="compute-status">
                 <span>FORMULA: <strong>LCI = C_task / Phi(a, latency, availability, safety)</strong></span>
+              </div>
+            </div>
+
+            <div class="compute-panel" id="floorplan-panel" role="tabpanel" aria-labelledby="tab-floorplan" hidden>
+              <div class="compute-header floorplan-header">
+                <span>[TARGET]: Constraint-Based Silicon Floorplanning</span>
+                <span>INTERACTIVE_CANVAS</span>
+              </div>
+              <div class="compute-body floorplan-body">
+                <canvas id="floorplan-canvas" width="640" height="384" aria-label="Interactive die floorplan"></canvas>
+                <div class="telemetry-grid floorplan-telemetry">
+                  <div>WIRE DELAY: <span id="fp-wire-delay">--</span></div>
+                  <div>THERMAL: <span id="fp-thermal">--</span></div>
+                  <div>ROUTING: <span id="fp-routing">VALID</span></div>
+                  <div>SCORE: <span id="fp-score">--</span></div>
+                  <div class="floorplan-log">
+                    <p>CONSTRAINT LOGIC:</p>
+                    <p>- ALU latency scales with L2 distance.</p>
+                    <p>- Heat density scales inversely with squared proximity.</p>
+                    <p>- Optimize throughput against thermal throttling.</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
