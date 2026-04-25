@@ -1322,7 +1322,7 @@ fn fs_main(@location(0) speed: f32) -> @location(0) vec4<f32> {
   setDataFlowTelemetry("count", particleCount.toLocaleString("en-US"));
   setDataFlowTelemetry("compute", "WGSL_COMPUTE+POINT_LIST");
   setDataFlowTelemetry("state", "ACTIVE_FLOW");
-  if (dataFlowTelemetry.backend) dataFlowTelemetry.backend.style.color = "#00ff88";
+  if (dataFlowTelemetry.backend) dataFlowTelemetry.backend.style.color = "#76b900";
 
   let animationId = 0;
   let lastTime = performance.now();
@@ -1469,7 +1469,7 @@ function runCpuDataFlow(canvas, pointer) {
 
       const speed = Math.min(1, Math.sqrt(vx * vx + vy * vy) * 0.038);
       ctx.fillStyle =
-        speed > 0.62 ? "rgba(255, 170, 0, 0.72)" : "rgba(0, 255, 136, 0.62)";
+        speed > 0.62 ? "rgba(255, 170, 0, 0.72)" : "rgba(118, 185, 0, 0.62)";
       ctx.fillRect(x, y, 2, 2);
     }
 
@@ -1611,14 +1611,14 @@ function drawLCI() {
   };
 
   drawCurve("standard", "#ffaa00");
-  drawCurve("mstack", "#00ff88");
+  drawCurve("mstack", "#76b900");
 
   ctx.font = "12px JetBrains Mono, SFMono-Regular, Consolas, monospace";
   ctx.fillStyle = "rgba(229, 231, 235, 0.78)";
   ctx.fillText("u=0.20", plot.left, height - 14);
   ctx.fillText("u=0.96", plot.right - 48, height - 14);
   ctx.fillText("LCI", 10, plot.top + 8);
-  ctx.fillStyle = "#00ff88";
+  ctx.fillStyle = "#76b900";
   ctx.fillText("M-STACK", plot.left + plotWidth * 0.18, toY(modelAt(0.48, "mstack").lci) - 10);
   ctx.fillStyle = "#ffaa00";
   ctx.fillText("STANDARD", plot.left + plotWidth * 0.58, toY(modelAt(0.62, "standard").lci) - 12);
@@ -1691,7 +1691,7 @@ const seedFloorplanBlocks = (width, height) => {
 
   floorplanBlocks = [
     block("ALU", 100, 90, 80, 80, 100, "#ffaa00", "COMPUTE"),
-    block("L2", 258, 105, 104, 62, 42, "#00ff88", "L2_CACHE"),
+    block("L2", 258, 105, 104, 62, 42, "#76b900", "L2_CACHE"),
     block("MEM", 426, 198, 66, 122, 62, "#9a9a9a", "MEM_CTRL"),
     block("TAP", 58, 270, 48, 44, 12, "#e0e0e0", "DEBUG_TAP")
   ];
@@ -1772,7 +1772,7 @@ function renderFloorplan() {
     const distance = Math.abs(start.x - end.x) + Math.abs(start.y - end.y);
     totalWireDistance += distance * route.weight;
 
-    ctx.strokeStyle = route.weight > 2 ? "rgba(0, 255, 136, 0.68)" : "rgba(224, 224, 224, 0.34)";
+    ctx.strokeStyle = route.weight > 2 ? "rgba(118, 185, 0, 0.68)" : "rgba(224, 224, 224, 0.34)";
     ctx.lineWidth = route.weight;
     ctx.beginPath();
     ctx.moveTo(start.x, start.y);
@@ -1821,7 +1821,7 @@ function renderFloorplan() {
 
   if (floorplanTelemetry.wire) {
     floorplanTelemetry.wire.textContent = `${Math.round(wireDelayPs)} ps`;
-    floorplanTelemetry.wire.style.color = wireScore < 45 ? "#ff4444" : "#00ff88";
+    floorplanTelemetry.wire.style.color = wireScore < 45 ? "#ff4444" : "#76b900";
   }
   if (floorplanTelemetry.thermal) {
     floorplanTelemetry.thermal.textContent = `${thermalPenalty.toFixed(1)} W/mm2`;
@@ -2043,7 +2043,7 @@ function renderScan() {
 
   const currentTransitions = TAP_TRANSITIONS[scanState];
   [
-    { next: currentTransitions[0], label: "TMS0", color: "#00ff88" },
+    { next: currentTransitions[0], label: "TMS0", color: "#76b900" },
     { next: currentTransitions[1], label: "TMS1", color: "#ffaa00" }
   ].forEach((route, index) => {
     const start = nodeCenters[scanState];
@@ -2069,9 +2069,9 @@ function renderScan() {
     const x = center.x - nodeWidth * 0.5;
     const y = center.y - nodeHeight * 0.5;
 
-    ctx.fillStyle = active ? "rgba(0, 255, 136, 0.12)" : "#0a0a0a";
+    ctx.fillStyle = active ? "rgba(118, 185, 0, 0.12)" : "#0a0a0a";
     ctx.fillRect(x, y, nodeWidth, nodeHeight);
-    ctx.strokeStyle = active ? "#00ff88" : "rgba(255, 255, 255, 0.18)";
+    ctx.strokeStyle = active ? "#76b900" : "rgba(255, 255, 255, 0.18)";
     ctx.lineWidth = active ? 2 : 1;
     ctx.strokeRect(x + 0.5, y + 0.5, nodeWidth - 1, nodeHeight - 1);
     ctx.fillStyle = active ? "#e0e0e0" : "#444444";
@@ -2091,11 +2091,11 @@ function renderScan() {
 
   scanRegister.forEach((bit, index) => {
     const x = registerX + index * cellWidth;
-    ctx.fillStyle = bit ? "rgba(0, 255, 136, 0.22)" : "#0a0a0a";
+    ctx.fillStyle = bit ? "rgba(118, 185, 0, 0.22)" : "#0a0a0a";
     ctx.fillRect(x, registerY, cellWidth, 26);
     ctx.strokeStyle = "rgba(255, 255, 255, 0.18)";
     ctx.strokeRect(x + 0.5, registerY + 0.5, cellWidth - 1, 25);
-    ctx.fillStyle = bit ? "#00ff88" : "#444444";
+    ctx.fillStyle = bit ? "#76b900" : "#444444";
     ctx.textAlign = "center";
     ctx.fillText(String(bit), x + cellWidth * 0.5, registerY + 17);
   });
@@ -2110,7 +2110,7 @@ function renderScan() {
   const waveStart = registerY + 58;
   drawDigitalWave(ctx, "TCK", tckValues, waveX, waveStart, waveWidth, "#e0e0e0");
   drawDigitalWave(ctx, "TMS", tmsValues, waveX, waveStart + 34, waveWidth, "#ffaa00");
-  drawDigitalWave(ctx, "TDI", tdiValues, waveX, waveStart + 68, waveWidth, "#00ff88");
+  drawDigitalWave(ctx, "TDI", tdiValues, waveX, waveStart + 68, waveWidth, "#76b900");
   drawDigitalWave(ctx, "TDO", tdoValues, waveX, waveStart + 102, waveWidth, "#9a9a9a");
 
   setScanTelemetry();
@@ -2400,7 +2400,7 @@ function renderFault() {
   ctx.fillStyle = "#020202";
   ctx.fillRect(0, 0, width, height);
 
-  ctx.strokeStyle = "rgba(0, 255, 136, 0.08)";
+  ctx.strokeStyle = "rgba(118, 185, 0, 0.08)";
   ctx.lineWidth = 1;
   for (let x = 0; x <= width; x += 24) {
     ctx.beginPath();
@@ -2445,14 +2445,14 @@ function renderFault() {
             : status === "FLUSHED"
               ? "rgba(68, 68, 68, 0.28)"
               : record
-                ? "rgba(0, 255, 136, 0.16)"
+                ? "rgba(118, 185, 0, 0.16)"
                 : "rgba(255, 255, 255, 0.02)";
       ctx.fillRect(x, y, cellW - 2, cellH - 2);
       ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
       ctx.strokeRect(x + 0.5, y + 0.5, cellW - 2, cellH - 2);
 
       if (stage) {
-        ctx.fillStyle = status === "FAULT" ? "#ff4444" : status === "STALL" ? "#ffaa00" : "#00ff88";
+        ctx.fillStyle = status === "FAULT" ? "#ff4444" : status === "STALL" ? "#ffaa00" : "#76b900";
         ctx.textAlign = "center";
         ctx.fillText(stage.slice(0, 2), x + cellW * 0.5, y + cellH * 0.5);
       }
@@ -2599,7 +2599,7 @@ const renderComputeSignature = (values, size, backend) => {
       const value = Math.abs(values[index] || 0);
       const intensity = Math.min(1, (value % 1.7) / 1.7);
       const alpha = 0.16 + intensity * 0.84;
-      ctx.fillStyle = blueMode ? `rgba(0, 255, 136, ${alpha})` : `rgba(255, 170, 0, ${alpha})`;
+      ctx.fillStyle = blueMode ? `rgba(118, 185, 0, ${alpha})` : `rgba(255, 170, 0, ${alpha})`;
       ctx.fillRect(column * cellWidth, row * cellHeight, Math.max(1, cellWidth - 1), Math.max(1, cellHeight - 1));
     }
   }
@@ -2900,7 +2900,7 @@ const drawLife = () => {
   for (let row = 0; row < LIFE_ROWS; row += 1) {
     for (let column = 0; column < LIFE_COLUMNS; column += 1) {
       if (!lifeCells[lifeIndex(column, row)]) continue;
-      ctx.fillStyle = (column + row + lifeGeneration) % 11 === 0 ? "#ffaa00" : "#00ff88";
+      ctx.fillStyle = (column + row + lifeGeneration) % 11 === 0 ? "#ffaa00" : "#76b900";
       ctx.fillRect(
         Math.floor(column * cellWidth),
         Math.floor(row * cellHeight),
